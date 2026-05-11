@@ -3,5 +3,12 @@
 *.log
 __pycache__/
 *.pyc
+*.pycache
 venv/
 .venv/
+build/
+dist/
+*.spec
+# Thư mục ảnh sản phẩm (không cần lên git)
+"Các Game nạp được/"
+Các*/

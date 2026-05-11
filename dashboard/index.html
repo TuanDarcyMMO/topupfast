@@ -1,0 +1,2251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TopUpFast Dashboard</title>
+    <style>
+      :root {
+        --bg: #f4f6fb;
+        --surface: #ffffff;
+        --surface2: #f0f2f8;
+        --border: #e2e8f0;
+        --text: #1a202c;
+        --text2: #64748b;
+        --accent: #6366f1;
+        --accent-hover: #4f46e5;
+        --green: #22c55e;
+        --yellow: #f59e0b;
+        --red: #ef4444;
+        --blue: #3b82f6;
+        --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+        --radius: 12px;
+      }
+      [data-theme="dark"] {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #252836;
+        --border: #2d3148;
+        --text: #e2e8f0;
+        --text2: #94a3b8;
+        --card-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+
+      /* ── Auth ─────────────────────────────────────── */
+      #auth-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .auth-card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 40px;
+        width: 360px;
+        box-shadow: var(--card-shadow);
+      }
+      .auth-card h1 {
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+        color: var(--accent);
+      }
+      .auth-card p {
+        color: var(--text2);
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text2);
+      }
+      .form-group input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface2);
+        color: var(--text);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border 0.15s;
+      }
+      .form-group input:focus {
+        border-color: var(--accent);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+      .btn-success {
+        background: var(--green);
+        color: #fff;
+      }
+      .btn-danger {
+        background: var(--red);
+        color: #fff;
+      }
+      .btn-sm {
+        padding: 6px 14px;
+        font-size: 0.82rem;
+      }
+      .btn-full {
+        width: 100%;
+        justify-content: center;
+      }
+      #auth-error {
+        color: var(--red);
+        font-size: 0.85rem;
+        margin-top: 10px;
+        display: none;
+      }
+
+      /* ── App shell ────────────────────────────────── */
+      #app {
+        display: none;
+      }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 220px;
+        height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        z-index: 10;
+      }
+      .sidebar-logo {
+        padding: 0 20px 20px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 12px;
+      }
+      .nav-item {
+        padding: 10px 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--text2);
+        border-radius: 0;
+        transition: all 0.15s;
+        border-left: 3px solid transparent;
+      }
+      .nav-item:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .nav-item.active {
+        background: var(--surface2);
+        color: var(--accent);
+        border-left-color: var(--accent);
+        font-weight: 600;
+      }
+      .nav-item span.icon {
+        font-size: 1rem;
+      }
+      .sidebar-bottom {
+        margin-top: auto;
+        padding: 0 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .user-chip {
+        background: var(--surface2);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.82rem;
+        color: var(--text2);
+      }
+      .user-chip strong {
+        display: block;
+        color: var(--text);
+        font-size: 0.9rem;
+      }
+
+      .main {
+        margin-left: 220px;
+        padding: 28px;
+        min-height: 100vh;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+      }
+
+      /* ── Stats cards ──────────────────────────────── */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .stat-card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border);
+      }
+      .stat-card .label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text2);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+      }
+      .stat-card .value {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+      .stat-card.green .value {
+        color: var(--green);
+      }
+      .stat-card.yellow .value {
+        color: var(--yellow);
+      }
+      .stat-card.red .value {
+        color: var(--red);
+      }
+      .stat-card.blue .value {
+        color: var(--blue);
+      }
+      .stat-card.purple .value {
+        color: var(--accent);
+      }
+
+      /* ── Table ────────────────────────────────────── */
+      .table-wrap {
+        background: var(--surface);
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .table-header {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .table-header h2 {
+        font-size: 1rem;
+        font-weight: 700;
+      }
+      .filter-bar {
+        display: flex;
+        gap: 8px;
+      }
+      .filter-btn {
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border);
+        background: transparent;
+        color: var(--text2);
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.15s;
+      }
+      .filter-btn.active,
+      .filter-btn:hover {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text2);
+        border-bottom: 1px solid var(--border);
+        background: var(--surface2);
+      }
+      td {
+        padding: 13px 16px;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--surface2);
+      }
+
+      /* ── Badges ───────────────────────────────────── */
+      .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-delivering {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .badge-completed {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .badge-failed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge-refunded {
+        background: #fef9c3;
+        color: #854d0e;
+      }
+      .badge-refund_requested {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #f59e0b;
+      }
+      .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge-admin {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .badge-staff {
+        background: #e0f2fe;
+        color: #075985;
+      }
+      [data-theme="dark"] .badge-pending {
+        background: #422006;
+        color: #fcd34d;
+      }
+      [data-theme="dark"] .badge-delivering {
+        background: #1e3a5f;
+        color: #93c5fd;
+      }
+      [data-theme="dark"] .badge-completed {
+        background: #14532d;
+        color: #86efac;
+      }
+      [data-theme="dark"] .badge-failed {
+        background: #450a0a;
+        color: #fca5a5;
+      }
+      [data-theme="dark"] .badge-rejected {
+        background: #450a0a;
+        color: #fca5a5;
+      }
+      [data-theme="dark"] .badge-refunded {
+        background: #422006;
+        color: #fde68a;
+      }
+      [data-theme="dark"] .badge-refund_requested {
+        background: #451a03;
+        color: #fcd34d;
+        border-color: #d97706;
+      }
+      [data-theme="dark"] .badge-admin {
+        background: #2e1065;
+        color: #c4b5fd;
+      }
+      [data-theme="dark"] .badge-staff {
+        background: #0c4a6e;
+        color: #7dd3fc;
+      }
+
+      /* ── Modal ────────────────────────────────────── */
+      .modal-bg {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-bg.open {
+        display: flex;
+      }
+      .modal {
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 28px;
+        width: 420px;
+        max-width: 95vw;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+      }
+      .modal h3 {
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+      }
+      .modal textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface2);
+        color: var(--text);
+        resize: vertical;
+        min-height: 80px;
+        font-family: inherit;
+        font-size: 0.9rem;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+        justify-content: flex-end;
+      }
+
+      /* ── Theme toggle ─────────────────────────────── */
+      .theme-toggle {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .empty-state {
+        padding: 40px;
+        text-align: center;
+        color: var(--text2);
+        font-size: 0.9rem;
+      }
+
+      /* ── Responsive ───────────────────────────────── */
+      @media (max-width: 640px) {
+        .sidebar {
+          width: 100%;
+          height: auto;
+          position: relative;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .main {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ═══════════════════ LOGIN ═══════════════════ -->
+    <div id="auth-screen">
+      <div class="auth-card">
+        <h1>🚀 TopUpFast</h1>
+        <p>Staff Dashboard — Sign in to continue</p>
+        <div class="form-group">
+          <label>Username</label>
+          <input
+            type="text"
+            id="login-user"
+            placeholder="your_username"
+            autocomplete="username"
+          />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            id="login-pass"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doLogin()">
+          Sign In
+        </button>
+        <div id="auth-error">❌ Invalid username or password.</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ APP ═══════════════════ -->
+    <div id="app">
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="sidebar-logo">⚡ TopUpFast</div>
+        <div
+          class="nav-item active"
+          onclick="showPage('orders')"
+          id="nav-orders"
+        >
+          <span class="icon">📋</span> Orders
+        </div>
+        <div
+          class="nav-item"
+          onclick="showPage('stats')"
+          id="nav-stats"
+          style="display: none"
+        >
+          <span class="icon">📊</span> Dashboard
+        </div>
+        <div
+          class="nav-item"
+          onclick="showPage('staff-list')"
+          id="nav-staff"
+          style="display: none"
+        >
+          <span class="icon">👥</span> Staff
+        </div>
+        <div
+          class="nav-item"
+          onclick="showPage('my-orders')"
+          id="nav-my-orders"
+          style="display: none"
+        >
+          <span class="icon">📌</span> My Orders
+        </div>
+        <div class="nav-item" onclick="showPage('withdraw')" id="nav-withdraw">
+          <span class="icon">💸</span> Withdraw
+          <span
+            id="nav-balance-badge"
+            style="margin-left: auto; font-size: 0.75rem; color: var(--green)"
+          ></span>
+        </div>
+        <div
+          class="nav-item"
+          onclick="showPage('withdrawals-admin')"
+          id="nav-withdrawals-admin"
+          style="display: none"
+        >
+          <span class="icon">💳</span> Approve Withdrawals
+        </div>
+        <div
+          class="nav-item"
+          onclick="showPage('orders-search')"
+          id="nav-orders-search"
+          style="display: none"
+        >
+          <span class="icon">🔍</span> Search Orders
+        </div>
+        <div class="sidebar-bottom">
+          <button class="theme-toggle" onclick="toggleTheme()">
+            🌙 Toggle Theme
+          </button>
+          <div class="user-chip">
+            <strong id="sidebar-username">—</strong>
+            <span id="sidebar-role">—</span>
+            <small
+              id="sidebar-balance"
+              style="color: var(--green); margin-top: 2px"
+            ></small>
+          </div>
+          <button class="btn btn-danger btn-sm btn-full" onclick="doLogout()">
+            Sign Out
+          </button>
+        </div>
+      </nav>
+
+      <main class="main">
+        <!-- ── Orders page ── -->
+        <div class="page active" id="page-orders">
+          <div class="page-title">📋 Orders</div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h2>All Orders</h2>
+              <div class="filter-bar">
+                <button
+                  class="filter-btn active"
+                  onclick="filterOrders(null, this)"
+                >
+                  All
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterOrders('pending', this)"
+                >
+                  Pending
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterOrders('delivering', this)"
+                >
+                  Delivering
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterOrders('completed', this)"
+                >
+                  Completed
+                </button>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="loadOrders()">
+                🔄 Refresh
+              </button>
+            </div>
+            <div id="orders-table-wrap">
+              <div class="empty-state">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── My Orders page (all staff) ── -->
+        <div class="page" id="page-my-orders">
+          <div class="page-title">📌 Đơn của tôi</div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h2>Đơn của tôi</h2>
+              <div class="filter-bar">
+                <button
+                  class="filter-btn active"
+                  onclick="filterMyOrders(null, this)"
+                >
+                  Tất cả
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterMyOrders('delivering', this)"
+                >
+                  Đang xử lý
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterMyOrders('completed', this)"
+                >
+                  Đã xong
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterMyOrders('rejected', this)"
+                >
+                  Từ chối
+                </button>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="loadMyOrders()">
+                🔄 Refresh
+              </button>
+            </div>
+            <div id="my-orders-table-wrap">
+              <div class="empty-state">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Stats page (admin) ── -->
+        <div class="page" id="page-stats">
+          <div class="page-title">📊 Admin Dashboard</div>
+          <div class="stats-grid" id="stats-grid">
+            <div class="empty-state">Loading...</div>
+          </div>
+          <div class="table-wrap" style="margin-top: 0">
+            <div class="table-header">
+              <h2>Recent Orders</h2>
+              <button class="btn btn-primary btn-sm" onclick="loadStats()">
+                🔄 Refresh
+              </button>
+            </div>
+            <div id="recent-orders-wrap">
+              <div class="empty-state">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Staff list (admin) ── -->
+        <div class="page" id="page-staff-list">
+          <div class="page-title">👥 Staff List</div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h2>All Staff</h2>
+              <button class="btn btn-primary btn-sm" onclick="loadStaff()">
+                🔄 Refresh
+              </button>
+            </div>
+            <div id="staff-table-wrap">
+              <div class="empty-state">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Withdraw page (staff) ── -->
+        <div class="page" id="page-withdraw">
+          <div class="page-title">💸 Rút tiền</div>
+
+          <!-- Balance card -->
+          <div class="stats-grid" style="margin-bottom: 24px">
+            <div class="stat-card green">
+              <div class="label">Số dư hoa hồng</div>
+              <div class="value" id="withdraw-balance">—</div>
+              <div
+                style="font-size: 0.78rem; color: var(--text2); margin-top: 4px"
+              >
+                Sau 24h kể từ lúc hoàn thành đơn
+              </div>
+            </div>
+            <div class="stat-card blue">
+              <div class="label">Chiết khấu</div>
+              <div class="value">50%</div>
+              <div
+                style="font-size: 0.78rem; color: var(--text2); margin-top: 4px"
+              >
+                Hoa hồng = 50% giá trị đơn
+              </div>
+            </div>
+          </div>
+
+          <!-- Bank accounts -->
+          <div class="table-wrap" style="margin-bottom: 24px">
+            <div class="table-header">
+              <h2>🏦 Tài khoản ngân hàng</h2>
+              <button class="btn btn-primary btn-sm" onclick="openAddBank()">
+                + Thêm STK
+              </button>
+            </div>
+            <div id="bank-accounts-wrap">
+              <div class="empty-state">Loading...</div>
+            </div>
+          </div>
+
+          <!-- Withdraw request -->
+          <div class="table-wrap" style="margin-bottom: 24px">
+            <div class="table-header">
+              <h2>💵 Yêu cầu rút tiền</h2>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="loadMyWithdrawals()"
+              >
+                🔄 Refresh
+              </button>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 12px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+                padding: 0 0 16px;
+              "
+            >
+              <div>
+                <label
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text2);
+                    display: block;
+                    margin-bottom: 4px;
+                  "
+                  >Số tiền rút (USD, tối thiểu $5)</label
+                >
+                <input
+                  id="withdraw-amount"
+                  type="number"
+                  min="5"
+                  step="0.01"
+                  placeholder="5.00"
+                  style="
+                    padding: 8px 12px;
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    background: var(--surface);
+                    color: var(--text);
+                    width: 150px;
+                  "
+                />
+              </div>
+              <div>
+                <label
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text2);
+                    display: block;
+                    margin-bottom: 4px;
+                  "
+                  >STK nhận tiền</label
+                >
+                <select
+                  id="withdraw-bank-select"
+                  style="
+                    padding: 8px 12px;
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    background: var(--surface);
+                    color: var(--text);
+                    min-width: 220px;
+                  "
+                >
+                  <option value="">— Chọn tài khoản —</option>
+                </select>
+              </div>
+              <div
+                id="withdraw-vnd-preview"
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text2);
+                  padding-bottom: 8px;
+                "
+              ></div>
+              <button class="btn btn-success" onclick="submitWithdraw()">
+                💸 Rút tiền
+              </button>
+            </div>
+            <div id="my-withdrawals-wrap">
+              <div class="empty-state">Chưa có yêu cầu rút tiền.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Withdrawals admin page ── -->
+        <div class="page" id="page-withdrawals-admin">
+          <div class="page-title">💳 Duyệt rút tiền</div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <h2>Yêu cầu rút tiền</h2>
+              <div class="filter-bar">
+                <button
+                  class="filter-btn active"
+                  onclick="filterWithdrawals(null, this)"
+                >
+                  All
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterWithdrawals('pending', this)"
+                >
+                  Pending
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterWithdrawals('completed', this)"
+                >
+                  Completed
+                </button>
+                <button
+                  class="filter-btn"
+                  onclick="filterWithdrawals('rejected', this)"
+                >
+                  Rejected
+                </button>
+              </div>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="loadWithdrawals()"
+              >
+                🔄 Refresh
+              </button>
+            </div>
+            <div id="withdrawals-table-wrap">
+              <div class="empty-state">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Orders search (admin) ── -->
+        <div class="page" id="page-orders-search">
+          <div class="page-title">🔍 Tìm & Xuất đơn</div>
+          <div class="table-wrap">
+            <div class="table-header" style="flex-wrap: wrap; gap: 8px">
+              <h2>Lọc đơn hàng</h2>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                padding: 0 0 16px;
+              "
+            >
+              <input
+                id="search-order-id"
+                type="number"
+                placeholder="Order ID"
+                style="
+                  padding: 8px 12px;
+                  border: 1px solid var(--border);
+                  border-radius: 8px;
+                  background: var(--surface);
+                  color: var(--text);
+                  width: 110px;
+                "
+              />
+              <input
+                id="search-game-id"
+                type="text"
+                placeholder="Game ID (e.g. roblox)"
+                style="
+                  padding: 8px 12px;
+                  border: 1px solid var(--border);
+                  border-radius: 8px;
+                  background: var(--surface);
+                  color: var(--text);
+                  width: 160px;
+                "
+              />
+              <input
+                id="search-staff-id"
+                type="text"
+                placeholder="Staff Discord ID"
+                style="
+                  padding: 8px 12px;
+                  border: 1px solid var(--border);
+                  border-radius: 8px;
+                  background: var(--surface);
+                  color: var(--text);
+                  width: 180px;
+                "
+              />
+              <select
+                id="search-status"
+                style="
+                  padding: 8px 12px;
+                  border: 1px solid var(--border);
+                  border-radius: 8px;
+                  background: var(--surface);
+                  color: var(--text);
+                "
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="pending">Pending</option>
+                <option value="delivering">Delivering</option>
+                <option value="completed">Completed</option>
+                <option value="refunded">Refunded</option>
+                <option value="failed">Failed</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="runOrderSearch()">
+                🔍 Tìm
+              </button>
+              <button
+                class="btn btn-sm"
+                style="background: var(--surface2); color: var(--text)"
+                onclick="exportOrdersCSV()"
+              >
+                ⬇️ Xuất CSV
+              </button>
+            </div>
+            <div id="search-results-wrap">
+              <div class="empty-state">Nhập điều kiện và bấm Tìm.</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ── Add bank account modal ── -->
+    <div class="modal-bg" id="add-bank-modal">
+      <div class="modal" style="max-width: 480px">
+        <h3>🏦 Thêm tài khoản ngân hàng</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text2)"
+              >Tên ngân hàng *</label
+            >
+            <input
+              id="bank-name"
+              type="text"
+              placeholder="VD: Vietcombank, MB Bank..."
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text);
+                box-sizing: border-box;
+                margin-top: 4px;
+              "
+            />
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text2)"
+              >Số tài khoản *</label
+            >
+            <input
+              id="bank-account-number"
+              type="text"
+              placeholder="VD: 0123456789"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text);
+                box-sizing: border-box;
+                margin-top: 4px;
+              "
+            />
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text2)"
+              >Chủ tài khoản *</label
+            >
+            <input
+              id="bank-account-holder"
+              type="text"
+              placeholder="VD: NGUYEN VAN A"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text);
+                box-sizing: border-box;
+                margin-top: 4px;
+              "
+            />
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text2)"
+              >Chi nhánh (tùy chọn)</label
+            >
+            <input
+              id="bank-branch"
+              type="text"
+              placeholder="VD: Chi nhánh Hà Nội"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text);
+                box-sizing: border-box;
+                margin-top: 4px;
+              "
+            />
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text2)"
+              >Mã QR (ảnh, tùy chọn — tối đa 500KB)</label
+            >
+            <input
+              id="bank-qr-file"
+              type="file"
+              accept="image/*"
+              style="width: 100%; margin-top: 4px; font-size: 0.85rem"
+            />
+            <img
+              id="bank-qr-preview"
+              src=""
+              alt=""
+              style="
+                display: none;
+                max-width: 160px;
+                max-height: 160px;
+                margin-top: 8px;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+              "
+            />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeAddBank()"
+          >
+            Huỷ
+          </button>
+          <button class="btn btn-success" onclick="submitAddBank()">
+            💾 Lưu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Withdrawal complete modal (admin) ── -->
+    <div class="modal-bg" id="wd-complete-modal">
+      <div class="modal">
+        <h3>✅ Xác nhận đã thanh toán #<span id="wd-complete-id"></span></h3>
+        <label
+          style="
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: block;
+            margin-bottom: 6px;
+          "
+          >Ghi chú (optional)</label
+        >
+        <textarea
+          id="wd-complete-note"
+          placeholder="VD: Đã chuyển khoản MB Bank lúc 14:30"
+        ></textarea>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeWdCompleteModal()"
+          >
+            Huỷ
+          </button>
+          <button class="btn btn-success" onclick="submitWdComplete()">
+            ✅ Đánh dấu đã thanh toán
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Withdrawal reject modal (admin) ── -->
+    <div class="modal-bg" id="wd-reject-modal">
+      <div class="modal">
+        <h3>❌ Từ chối rút tiền #<span id="wd-reject-id"></span></h3>
+        <label
+          style="
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: block;
+            margin-bottom: 6px;
+          "
+          >Lý do (optional)</label
+        >
+        <textarea
+          id="wd-reject-note"
+          placeholder="VD: Thông tin tài khoản không hợp lệ"
+        ></textarea>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeWdRejectModal()"
+          >
+            Huỷ
+          </button>
+          <button class="btn btn-danger" onclick="submitWdReject()">
+            ❌ Từ chối & hoàn tiền
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Reject modal ── -->
+    <div class="modal-bg" id="reject-modal">
+      <div class="modal">
+        <h3>❌ Reject Order #<span id="reject-modal-order-id"></span></h3>
+        <label
+          style="
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: block;
+            margin-bottom: 6px;
+          "
+        >
+          Lý do từ chối (optional)
+        </label>
+        <textarea
+          id="reject-modal-reason"
+          placeholder="e.g. Không nạp được do tài khoản lỗi."
+        ></textarea>
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+          "
+        >
+          <input
+            type="checkbox"
+            id="reject-modal-refund"
+            style="width: 16px; height: 16px"
+          />
+          💰 Yêu cầu hoàn tiền cho khách (gửi admin duyệt)
+        </label>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeRejectModal()"
+          >
+            Huỷ
+          </button>
+          <button class="btn btn-danger" onclick="submitReject()">
+            ❌ Xác nhận từ chối
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Deny refund modal ── -->
+    <div class="modal-bg" id="deny-refund-modal">
+      <div class="modal">
+        <h3>
+          ❌ Từ chối hoàn tiền Đơn #<span
+            id="deny-refund-modal-order-id"
+          ></span>
+        </h3>
+        <label
+          style="
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: block;
+            margin-bottom: 6px;
+          "
+        >
+          Lý do từ chối (optional)
+        </label>
+        <textarea
+          id="deny-refund-modal-reason"
+          placeholder="e.g. Đã xử lý một phần, không hoàn tiền."
+        ></textarea>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeDenyRefundModal()"
+          >
+            Huỷ
+          </button>
+          <button class="btn btn-danger" onclick="submitDenyRefund()">
+            ❌ Từ chối hoàn tiền
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Refund modal ── -->
+    <div class="modal-bg" id="refund-modal">
+      <div class="modal">
+        <h3>💸 Refund Order #<span id="refund-modal-order-id"></span></h3>
+        <label
+          style="
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: block;
+            margin-bottom: 6px;
+          "
+          >Refund Note (optional)</label
+        >
+        <textarea
+          id="refund-modal-note"
+          placeholder="e.g. Customer requested refund."
+        ></textarea>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeRefundModal()"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-danger" onclick="submitRefund()">
+            💸 Confirm Refund
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Complete modal ── -->
+    <div class="modal-bg" id="complete-modal">
+      <div class="modal">
+        <h3>✅ Complete Order #<span id="modal-order-id"></span></h3>
+        <label
+          style="
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: block;
+            margin-bottom: 6px;
+          "
+          >Delivery Note (optional)</label
+        >
+        <textarea
+          id="modal-note"
+          placeholder="e.g. Done, top-up credited to account."
+        ></textarea>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeModal()"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-success" onclick="submitComplete()">
+            ✅ Mark Complete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── State ──────────────────────────────────────────────────────────────────
+      const API = ""; // same origin
+      let _me = null;
+      let _currentFilter = null;
+      let _myOrdersFilter = null;
+      let _myOrders = [];
+      let _completeOrderId = null;
+      let _refundOrderId = null;
+      let _rejectOrderId = null;
+      let _allOrders = [];
+
+      async function api(method, path, body) {
+        const opts = {
+          method,
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+        };
+        if (body !== undefined) opts.body = JSON.stringify(body);
+        const r = await fetch(API + path, opts);
+        if (r.status === 401) {
+          doLogout();
+          return null;
+        }
+        if (!r.ok) {
+          const e = await r.json().catch(() => ({}));
+          throw new Error(e.error || r.statusText);
+        }
+        return r.json();
+      }
+
+      // ── Theme ──────────────────────────────────────────────────────────────────
+      function initTheme() {
+        const saved = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", saved);
+      }
+      function toggleTheme() {
+        const cur = document.documentElement.getAttribute("data-theme");
+        const next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      }
+      initTheme();
+
+      // ── Auth ───────────────────────────────────────────────────────────────────
+      async function doLogin() {
+        const username = document.getElementById("login-user").value.trim();
+        const password = document.getElementById("login-pass").value;
+        const errEl = document.getElementById("auth-error");
+        errEl.style.display = "none";
+        try {
+          const r = await fetch("/api/login", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          if (!r.ok) {
+            errEl.style.display = "block";
+            return;
+          }
+          await initApp();
+        } catch {
+          errEl.style.display = "block";
+        }
+      }
+
+      document.getElementById("login-pass").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+      });
+
+      function doLogout() {
+        _me = null;
+        fetch("/api/logout", {
+          method: "POST",
+          credentials: "same-origin",
+        }).catch(() => {});
+        document.getElementById("app").style.display = "none";
+        document.getElementById("auth-screen").style.display = "flex";
+      }
+
+      async function initApp() {
+        _me = await api("GET", "/api/me");
+        if (!_me) return;
+        document.getElementById("auth-screen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        document.getElementById("sidebar-username").textContent = _me.username;
+        document.getElementById("sidebar-role").textContent = _me.role;
+
+        if (_me.role === "admin") {
+          document.getElementById("nav-stats").style.display = "flex";
+          document.getElementById("nav-staff").style.display = "flex";
+          document.getElementById("nav-withdrawals-admin").style.display =
+            "flex";
+          document.getElementById("nav-orders-search").style.display = "flex";
+        }
+        // My Orders: visible to all staff
+        document.getElementById("nav-my-orders").style.display = "flex";
+
+        // Load and show commission balance in sidebar
+        loadBalanceSidebar();
+
+        showPage("orders");
+        loadOrders();
+      }
+
+      // ── Navigation ─────────────────────────────────────────────────────────────
+      function showPage(name) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+        document.getElementById("page-" + name).classList.add("active");
+        document.getElementById("nav-" + name)?.classList.add("active");
+        if (name === "stats") loadStats();
+        if (name === "staff-list") loadStaff();
+        if (name === "my-orders") loadMyOrders();
+        if (name === "withdraw") loadWithdrawPage();
+        if (name === "withdrawals-admin") loadWithdrawals();
+      }
+
+      // ── Orders ─────────────────────────────────────────────────────────────────
+      async function loadOrders() {
+        document.getElementById("orders-table-wrap").innerHTML =
+          '<div class="empty-state">Loading...</div>';
+        const url = _currentFilter
+          ? `/api/orders?status=${_currentFilter}`
+          : "/api/orders";
+        try {
+          _allOrders = (await api("GET", url)) || [];
+          renderOrders(_allOrders);
+        } catch (e) {
+          document.getElementById("orders-table-wrap").innerHTML =
+            `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      function filterOrders(status, btn) {
+        _currentFilter = status;
+        document
+          .querySelectorAll("#page-orders .filter-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        loadOrders();
+      }
+
+      async function loadMyOrders() {
+        document.getElementById("my-orders-table-wrap").innerHTML =
+          '<div class="empty-state">Loading...</div>';
+        const url = _myOrdersFilter
+          ? `/api/orders?mine=true&status=${_myOrdersFilter}`
+          : "/api/orders?mine=true";
+        try {
+          _myOrders = (await api("GET", url)) || [];
+          renderOrders(_myOrders, "my-orders-table-wrap");
+        } catch (e) {
+          document.getElementById("my-orders-table-wrap").innerHTML =
+            `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      function filterMyOrders(status, btn) {
+        _myOrdersFilter = status;
+        document
+          .querySelectorAll("#page-my-orders .filter-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        loadMyOrders();
+      }
+
+      function renderOrders(orders, wrapId = "orders-table-wrap") {
+        const wrap = document.getElementById(wrapId);
+        if (!orders.length) {
+          wrap.innerHTML = '<div class="empty-state">No orders found.</div>';
+          return;
+        }
+        wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>#</th><th>Game</th><th>Package</th><th>Account</th>
+      <th>Price</th><th>Status</th><th>Created</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${orders
+      .map(
+        (o) => `
+    <tr>
+      <td><strong>#${o.id}</strong></td>
+      <td>${o.game_id}</td>
+      <td>${o.package_name}</td>
+      <td><code style="font-size:0.8rem">${o.game_account || "-"}</code>${o.game_account_note ? `<br><small style="color:var(--text2)">${o.game_account_note}</small>` : ""}</td>
+      <td>$${parseFloat(o.price_usd).toFixed(2)}</td>
+      <td><span class="badge badge-${o.status}">${o.status}</span></td>
+      <td style="color:var(--text2);font-size:0.8rem">${fmtDate(o.created_at)}</td>
+      <td>${orderActions(o)}</td>
+    </tr>`,
+      )
+      .join("")}
+    </tbody></table>`;
+      }
+
+      function orderActions(o) {
+        const isAdmin = _me && _me.role === "admin";
+        // Admin direct refund button (only for non-final states that aren't refund_requested)
+        const directRefundBtn =
+          isAdmin &&
+          !["refunded", "completed", "failed", "refund_requested"].includes(
+            o.status,
+          )
+            ? `<button class="btn btn-danger btn-sm" onclick="openRefund(${o.id})" style="margin-top:4px">💸 Refund</button>`
+            : "";
+        // Reject button for staff on pending/delivering orders
+        const rejectBtn = ["pending", "delivering"].includes(o.status)
+          ? `<button class="btn btn-sm" onclick="openReject(${o.id})" style="background:var(--surface2);color:var(--text);margin-top:4px">❌ Reject</button>`
+          : "";
+
+        if (o.status === "pending") {
+          return [
+            `<button class="btn btn-primary btn-sm" onclick="claimOrder(${o.id})">🙋 Claim</button>`,
+            rejectBtn,
+            directRefundBtn,
+          ]
+            .filter(Boolean)
+            .join("<br>");
+        }
+        if (o.status === "delivering") {
+          const claimInfo = o.claimed_by
+            ? `<small style="color:var(--text2);display:block">👤 ${o.claimed_by}</small>`
+            : "";
+          return (
+            claimInfo +
+            [
+              `<button class="btn btn-success btn-sm" onclick="openComplete(${o.id})">✅ Complete</button>`,
+              rejectBtn,
+              directRefundBtn,
+            ]
+              .filter(Boolean)
+              .join("<br>")
+          );
+        }
+        if (o.status === "refund_requested") {
+          const staffInfo = o.completed_by
+            ? `<small style="color:var(--text2);display:block">👤 ${o.completed_by}</small>`
+            : "";
+          if (isAdmin) {
+            return (
+              staffInfo +
+              `<button class="btn btn-success btn-sm" onclick="approveRefund(${o.id})">✅ Approve</button><br>` +
+              `<button class="btn btn-danger btn-sm" onclick="openDenyRefund(${o.id})" style="margin-top:4px">❌ Deny</button>`
+            );
+          }
+          return (
+            staffInfo +
+            `<small style="color:var(--text2)">⏳ Đợi admin duyệt</small>`
+          );
+        }
+        if (o.status === "completed") {
+          const note = o.delivery_note
+            ? `<br><small style="color:var(--text2)">${o.delivery_note}</small>`
+            : "";
+          return `<small style="color:var(--text2)">✅ ${o.completed_by || ""}<br>${fmtDate(o.completed_at)}${note}</small>`;
+        }
+        if (o.status === "refunded") {
+          return `<small style="color:var(--text2)">💰 Refunded<br>${fmtDate(o.completed_at)}</small>`;
+        }
+        if (o.status === "failed") {
+          const note = o.delivery_note
+            ? `<br><small style="color:var(--text2)">${o.delivery_note}</small>`
+            : "";
+          return `<small style="color:var(--text2)">❌ Failed${note}</small>`;
+        }
+        return `<span style="color:var(--text2)">—</span>`;
+      }
+
+      async function claimOrder(id) {
+        try {
+          await api("POST", `/api/orders/${id}/claim`);
+          loadOrders();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      function openComplete(id) {
+        _completeOrderId = id;
+        document.getElementById("modal-order-id").textContent = id;
+        document.getElementById("modal-note").value = "";
+        document.getElementById("complete-modal").classList.add("open");
+      }
+      function closeModal() {
+        document.getElementById("complete-modal").classList.remove("open");
+      }
+      async function submitComplete() {
+        const note = document.getElementById("modal-note").value.trim();
+        try {
+          await api("POST", `/api/orders/${_completeOrderId}/complete`, {
+            note,
+          });
+          closeModal();
+          loadOrders();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      function openRefund(id) {
+        _refundOrderId = id;
+        document.getElementById("refund-modal-order-id").textContent = id;
+        document.getElementById("refund-modal-note").value = "";
+        document.getElementById("refund-modal").classList.add("open");
+      }
+      function closeRefundModal() {
+        document.getElementById("refund-modal").classList.remove("open");
+      }
+      async function submitRefund() {
+        const note = document.getElementById("refund-modal-note").value.trim();
+        try {
+          await api("POST", `/api/orders/${_refundOrderId}/refund`, { note });
+          closeRefundModal();
+          loadOrders();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // ── Reject order ────────────────────────────────────────────────────────────────
+      function openReject(id) {
+        _rejectOrderId = id;
+        document.getElementById("reject-modal-order-id").textContent = id;
+        document.getElementById("reject-modal-reason").value = "";
+        document.getElementById("reject-modal-refund").checked = false;
+        document.getElementById("reject-modal").classList.add("open");
+      }
+      function closeRejectModal() {
+        document.getElementById("reject-modal").classList.remove("open");
+      }
+      async function submitReject() {
+        const reason = document
+          .getElementById("reject-modal-reason")
+          .value.trim();
+        const request_refund = document.getElementById(
+          "reject-modal-refund",
+        ).checked;
+        try {
+          await api("POST", `/api/orders/${_rejectOrderId}/reject`, {
+            reason,
+            request_refund,
+          });
+          closeRejectModal();
+          loadOrders();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // ── Admin approve / deny refund ─────────────────────────────────────────────
+      async function approveRefund(id) {
+        if (!confirm(`Approve refund for order #${id}?`)) return;
+        try {
+          await api("POST", `/api/orders/${id}/approve-refund`, {});
+          loadOrders();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      let _denyRefundOrderId = null;
+      function openDenyRefund(id) {
+        _denyRefundOrderId = id;
+        document.getElementById("deny-refund-modal-order-id").textContent = id;
+        document.getElementById("deny-refund-modal-reason").value = "";
+        document.getElementById("deny-refund-modal").classList.add("open");
+      }
+      function closeDenyRefundModal() {
+        document.getElementById("deny-refund-modal").classList.remove("open");
+      }
+      async function submitDenyRefund() {
+        const reason = document
+          .getElementById("deny-refund-modal-reason")
+          .value.trim();
+        try {
+          await api("POST", `/api/orders/${_denyRefundOrderId}/deny-refund`, {
+            reason,
+          });
+          closeDenyRefundModal();
+          loadOrders();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // ── Stats ──────────────────────────────────────────────────────────────────
+      async function loadStats() {
+        try {
+          const [stats, orders] = await Promise.all([
+            api("GET", "/api/stats"),
+            api("GET", "/api/orders?limit=20"),
+          ]);
+          renderStats(stats);
+          document.getElementById("recent-orders-wrap").innerHTML = "";
+          const tmp = document.createElement("div");
+          tmp.id = "orders-table-wrap";
+          document.getElementById("recent-orders-wrap").appendChild(tmp);
+          if (orders) renderOrdersIn(tmp, orders.slice(0, 20));
+        } catch (e) {
+          document.getElementById("stats-grid").innerHTML =
+            `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      function renderStats(s) {
+        document.getElementById("stats-grid").innerHTML = `
+    <div class="stat-card green"><div class="label">Total Revenue</div><div class="value">$${s.total_revenue_usd.toFixed(2)}</div></div>
+    <div class="stat-card blue"><div class="label">Total Orders</div><div class="value">${s.total_orders}</div></div>
+    <div class="stat-card yellow"><div class="label">Pending</div><div class="value">${s.pending_orders}</div></div>
+    <div class="stat-card purple"><div class="label">Delivering</div><div class="value">${s.delivering_orders}</div></div>
+    <div class="stat-card green"><div class="label">Completed</div><div class="value">${s.completed_orders}</div></div>
+    <div class="stat-card red"><div class="label">Failed/Refunded</div><div class="value">${s.failed_orders}</div></div>
+  `;
+      }
+
+      function renderOrdersIn(wrap, orders) {
+        if (!orders.length) {
+          wrap.innerHTML = '<div class="empty-state">No orders.</div>';
+          return;
+        }
+        wrap.innerHTML = `<table>
+    <thead><tr><th>#</th><th>Game</th><th>Package</th><th>Price</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>${orders
+      .map(
+        (o) => `<tr>
+      <td>#${o.id}</td><td>${o.game_id}</td><td>${o.package_name}</td>
+      <td>$${parseFloat(o.price_usd).toFixed(2)}</td>
+      <td><span class="badge badge-${o.status}">${o.status}</span></td>
+      <td style="color:var(--text2);font-size:0.8rem">${fmtDate(o.created_at)}</td>
+    </tr>`,
+      )
+      .join("")}</tbody></table>`;
+      }
+
+      // ── Staff ──────────────────────────────────────────────────────────────────
+      async function loadStaff() {
+        const wrap = document.getElementById("staff-table-wrap");
+        wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+        try {
+          const list = (await api("GET", "/api/staff")) || [];
+          if (!list.length) {
+            wrap.innerHTML = '<div class="empty-state">No staff found.</div>';
+            return;
+          }
+          wrap.innerHTML = `<table>
+      <thead><tr><th>Username</th><th>Discord ID</th><th>Role</th><th>Active</th><th>Created</th></tr></thead>
+      <tbody>${list
+        .map(
+          (s) => `<tr>
+        <td><strong>${s.username}</strong></td>
+        <td><code style="font-size:0.8rem">${s.discord_id}</code></td>
+        <td><span class="badge badge-${s.role}">${s.role}</span></td>
+        <td>${s.active ? "✅" : "❌"}</td>
+        <td style="color:var(--text2);font-size:0.8rem">${fmtDate(s.created_at)}</td>
+      </tr>`,
+        )
+        .join("")}</tbody></table>`;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      // ── Helpers ────────────────────────────────────────────────────────────────
+      function fmtDate(iso) {
+        if (!iso) return "-";
+        const d = new Date(iso);
+        return d.toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      // ── Commission balance sidebar ─────────────────────────────────────────────
+      async function loadBalanceSidebar() {
+        try {
+          const r = await api("GET", "/api/staff/balance");
+          if (!r) return;
+          const bal = r.commission_balance.toFixed(2);
+          document.getElementById("sidebar-balance").textContent = `💰 $${bal}`;
+          document.getElementById("nav-balance-badge").textContent = `$${bal}`;
+        } catch {}
+      }
+
+      // ── Withdraw page ──────────────────────────────────────────────────────────
+      let _bankAccounts = [];
+
+      async function loadWithdrawPage() {
+        await Promise.all([
+          loadBalanceCard(),
+          loadBankAccounts(),
+          loadMyWithdrawals(),
+        ]);
+      }
+
+      async function loadBalanceCard() {
+        try {
+          const r = await api("GET", "/api/staff/balance");
+          if (!r) return;
+          document.getElementById("withdraw-balance").textContent =
+            `$${r.commission_balance.toFixed(2)} USD`;
+        } catch (e) {
+          document.getElementById("withdraw-balance").textContent = "Error";
+        }
+      }
+
+      async function loadBankAccounts() {
+        const wrap = document.getElementById("bank-accounts-wrap");
+        wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+        try {
+          _bankAccounts = (await api("GET", "/api/staff/bank-accounts")) || [];
+          // Refresh withdraw select
+          const sel = document.getElementById("withdraw-bank-select");
+          sel.innerHTML = '<option value="">— Chọn tài khoản —</option>';
+          _bankAccounts.forEach((a) => {
+            sel.innerHTML += `<option value="${a.id}">${a.bank_name} – ${a.account_number} (${a.account_holder})</option>`;
+          });
+          if (!_bankAccounts.length) {
+            wrap.innerHTML =
+              '<div class="empty-state">Chưa có tài khoản ngân hàng. Bấm "+ Thêm STK" để thêm.</div>';
+            return;
+          }
+          wrap.innerHTML = `<table>
+<thead><tr><th>Ngân hàng</th><th>Số TK</th><th>Chủ TK</th><th>Chi nhánh</th><th>QR</th><th></th></tr></thead>
+<tbody>${_bankAccounts
+            .map(
+              (a) => `<tr>
+  <td><strong>${a.bank_name}</strong></td>
+  <td><code>${a.account_number}</code></td>
+  <td>${a.account_holder}</td>
+  <td style="color:var(--text2)">${a.branch || "—"}</td>
+  <td>${a.qr_image !== undefined ? (a.qr_image ? "✅" : "—") : "—"}</td>
+  <td><button class="btn btn-danger btn-sm" onclick="deleteBankAccount(${a.id})">🗑️</button></td>
+</tr>`,
+            )
+            .join("")}</tbody></table>`;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      async function loadMyWithdrawals() {
+        const wrap = document.getElementById("my-withdrawals-wrap");
+        wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+        try {
+          const reqs = (await api("GET", "/api/withdrawals")) || [];
+          if (!reqs.length) {
+            wrap.innerHTML =
+              '<div class="empty-state">Chưa có yêu cầu rút tiền.</div>';
+            return;
+          }
+          wrap.innerHTML = `<table>
+<thead><tr><th>#</th><th>Số tiền</th><th>VND</th><th>Trạng thái</th><th>Ngày tạo</th><th>Ghi chú</th></tr></thead>
+<tbody>${reqs
+            .map(
+              (r) => `<tr>
+  <td>#${r.id}</td>
+  <td>$${parseFloat(r.amount_usd).toFixed(2)}</td>
+  <td>${parseInt(r.amount_vnd).toLocaleString("vi-VN")} ₫</td>
+  <td><span class="badge badge-${r.status}">${r.status}</span></td>
+  <td style="color:var(--text2);font-size:0.8rem">${fmtDate(r.created_at)}</td>
+  <td style="color:var(--text2);font-size:0.8rem">${r.admin_note || "—"}</td>
+</tr>`,
+            )
+            .join("")}</tbody></table>`;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      // Bank account CRUD
+      function openAddBank() {
+        document.getElementById("bank-name").value = "";
+        document.getElementById("bank-account-number").value = "";
+        document.getElementById("bank-account-holder").value = "";
+        document.getElementById("bank-branch").value = "";
+        document.getElementById("bank-qr-file").value = "";
+        document.getElementById("bank-qr-preview").style.display = "none";
+        document.getElementById("add-bank-modal").classList.add("open");
+      }
+      function closeAddBank() {
+        document.getElementById("add-bank-modal").classList.remove("open");
+      }
+      // QR preview
+      document
+        .getElementById("bank-qr-file")
+        .addEventListener("change", function () {
+          const file = this.files[0];
+          if (!file) return;
+          if (file.size > 500_000) {
+            alert("Ảnh QR tối đa 500KB!");
+            this.value = "";
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const preview = document.getElementById("bank-qr-preview");
+            preview.src = e.target.result;
+            preview.style.display = "block";
+          };
+          reader.readAsDataURL(file);
+        });
+      async function submitAddBank() {
+        const bank_name = document.getElementById("bank-name").value.trim();
+        const account_number = document
+          .getElementById("bank-account-number")
+          .value.trim();
+        const account_holder = document
+          .getElementById("bank-account-holder")
+          .value.trim();
+        const branch = document.getElementById("bank-branch").value.trim();
+        if (!bank_name || !account_number || !account_holder) {
+          alert("Vui lòng điền đủ Tên ngân hàng, Số TK, Chủ TK!");
+          return;
+        }
+        const qrFile = document.getElementById("bank-qr-file").files[0];
+        let qr_image = "";
+        if (qrFile) {
+          qr_image = await new Promise((res) => {
+            const r = new FileReader();
+            r.onload = (e) => res(e.target.result);
+            r.readAsDataURL(qrFile);
+          });
+        }
+        try {
+          await api("POST", "/api/staff/bank-accounts", {
+            bank_name,
+            account_number,
+            account_holder,
+            branch,
+            qr_image,
+          });
+          closeAddBank();
+          loadBankAccounts();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+      async function deleteBankAccount(id) {
+        if (!confirm("Xóa tài khoản ngân hàng này?")) return;
+        try {
+          await api("DELETE", `/api/staff/bank-accounts/${id}`);
+          loadBankAccounts();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // Withdraw request
+      document
+        .getElementById("withdraw-amount")
+        .addEventListener("input", updateVndPreview);
+      document
+        .getElementById("withdraw-bank-select")
+        .addEventListener("change", updateVndPreview);
+      function updateVndPreview() {
+        const amt =
+          parseFloat(document.getElementById("withdraw-amount").value) || 0;
+        const RATE = 26500;
+        if (amt > 0) {
+          document.getElementById("withdraw-vnd-preview").textContent =
+            `≈ ${(amt * RATE).toLocaleString("vi-VN")} ₫ (rate ${RATE.toLocaleString("vi-VN")})`;
+        } else {
+          document.getElementById("withdraw-vnd-preview").textContent = "";
+        }
+      }
+      async function submitWithdraw() {
+        const amount_usd = parseFloat(
+          document.getElementById("withdraw-amount").value,
+        );
+        const bank_account_id = parseInt(
+          document.getElementById("withdraw-bank-select").value,
+        );
+        if (!amount_usd || amount_usd < 5) {
+          alert("Số tiền tối thiểu là $5!");
+          return;
+        }
+        if (!bank_account_id) {
+          alert("Vui lòng chọn tài khoản ngân hàng!");
+          return;
+        }
+        if (!confirm(`Xác nhận rút $${amount_usd.toFixed(2)}?`)) return;
+        try {
+          await api("POST", "/api/staff/withdraw", {
+            amount_usd,
+            bank_account_id,
+          });
+          alert("✅ Yêu cầu rút tiền đã được gửi! Admin sẽ xử lý sớm.");
+          document.getElementById("withdraw-amount").value = "";
+          loadWithdrawPage();
+          loadBalanceSidebar();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // ── Withdrawals admin ──────────────────────────────────────────────────────
+      let _allWithdrawals = [];
+      let _wdFilter = null;
+      let _wdCompleteId = null;
+      let _wdRejectId = null;
+
+      async function loadWithdrawals() {
+        const wrap = document.getElementById("withdrawals-table-wrap");
+        wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+        try {
+          _allWithdrawals = (await api("GET", "/api/withdrawals")) || [];
+          renderWithdrawals();
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+      function filterWithdrawals(status, btn) {
+        _wdFilter = status;
+        document
+          .querySelectorAll("#page-withdrawals-admin .filter-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderWithdrawals();
+      }
+      function renderWithdrawals() {
+        const wrap = document.getElementById("withdrawals-table-wrap");
+        const list = _wdFilter
+          ? _allWithdrawals.filter((w) => w.status === _wdFilter)
+          : _allWithdrawals;
+        if (!list.length) {
+          wrap.innerHTML = '<div class="empty-state">Không có yêu cầu.</div>';
+          return;
+        }
+        wrap.innerHTML = `<table>
+<thead><tr><th>#</th><th>Staff</th><th>Ngân hàng</th><th>STK</th><th>Chủ TK</th><th>Số tiền</th><th>VND</th><th>Trạng thái</th><th>Ngày tạo</th><th>Hành động</th></tr></thead>
+<tbody>${list
+          .map(
+            (w) => `<tr>
+  <td>#${w.id}</td>
+  <td><strong>${w.staff_username}</strong></td>
+  <td>${w.bank_name || "—"}</td>
+  <td><code>${w.account_number || "—"}</code></td>
+  <td>${w.account_holder || "—"}</td>
+  <td><strong>$${parseFloat(w.amount_usd).toFixed(2)}</strong></td>
+  <td>${parseInt(w.amount_vnd).toLocaleString("vi-VN")} ₫</td>
+  <td><span class="badge badge-${w.status}">${w.status}</span></td>
+  <td style="color:var(--text2);font-size:0.8rem">${fmtDate(w.created_at)}</td>
+  <td>${
+    w.status === "pending"
+      ? `
+    <button class="btn btn-success btn-sm" onclick="openWdComplete(${w.id})">✅ Đã TT</button><br>
+    <button class="btn btn-danger btn-sm" onclick="openWdReject(${w.id})" style="margin-top:4px">❌ Từ chối</button>
+  `
+      : `<small style="color:var(--text2)">${w.admin_note || fmtDate(w.completed_at)}</small>`
+  }</td>
+</tr>`,
+          )
+          .join("")}</tbody></table>`;
+      }
+
+      function openWdComplete(id) {
+        _wdCompleteId = id;
+        document.getElementById("wd-complete-id").textContent = id;
+        document.getElementById("wd-complete-note").value = "";
+        document.getElementById("wd-complete-modal").classList.add("open");
+      }
+      function closeWdCompleteModal() {
+        document.getElementById("wd-complete-modal").classList.remove("open");
+      }
+      async function submitWdComplete() {
+        const note = document.getElementById("wd-complete-note").value.trim();
+        try {
+          await api("POST", `/api/withdrawals/${_wdCompleteId}/complete`, {
+            note,
+          });
+          closeWdCompleteModal();
+          loadWithdrawals();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+      function openWdReject(id) {
+        _wdRejectId = id;
+        document.getElementById("wd-reject-id").textContent = id;
+        document.getElementById("wd-reject-note").value = "";
+        document.getElementById("wd-reject-modal").classList.add("open");
+      }
+      function closeWdRejectModal() {
+        document.getElementById("wd-reject-modal").classList.remove("open");
+      }
+      async function submitWdReject() {
+        const note = document.getElementById("wd-reject-note").value.trim();
+        try {
+          await api("POST", `/api/withdrawals/${_wdRejectId}/reject`, { note });
+          closeWdRejectModal();
+          loadWithdrawals();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // ── Orders search & export ─────────────────────────────────────────────────
+      let _searchResults = [];
+
+      async function runOrderSearch() {
+        const wrap = document.getElementById("search-results-wrap");
+        wrap.innerHTML = '<div class="empty-state">Đang tìm...</div>';
+        const qs = new URLSearchParams();
+        const oid = document.getElementById("search-order-id").value.trim();
+        const gid = document.getElementById("search-game-id").value.trim();
+        const sid = document.getElementById("search-staff-id").value.trim();
+        const st = document.getElementById("search-status").value;
+        if (oid) qs.set("order_id", oid);
+        if (gid) qs.set("game_id", gid);
+        if (sid) qs.set("completed_by", sid);
+        if (st) qs.set("status", st);
+        try {
+          _searchResults = (await api("GET", `/api/orders/export?${qs}`)) || [];
+          if (!_searchResults.length) {
+            wrap.innerHTML =
+              '<div class="empty-state">Không tìm thấy đơn nào.</div>';
+            return;
+          }
+          wrap.innerHTML =
+            `<div style="margin-bottom:8px;color:var(--text2);font-size:0.85rem">Tìm thấy ${_searchResults.length} đơn</div>` +
+            `<table>
+<thead><tr><th>#</th><th>Game</th><th>Gói</th><th>Giá</th><th>Khách</th><th>TK game</th><th>Staff</th><th>Trạng thái</th><th>Ngày tạo</th><th>Hoàn thành</th></tr></thead>
+<tbody>${_searchResults
+              .map(
+                (o) => `<tr>
+  <td>#${o.id}</td>
+  <td>${o.game_id}</td>
+  <td>${o.package_name}</td>
+  <td>$${parseFloat(o.price_usd).toFixed(2)}</td>
+  <td><code style="font-size:0.75rem">${o.discord_id}</code></td>
+  <td><code style="font-size:0.75rem">${o.game_account || "—"}</code></td>
+  <td style="color:var(--text2);font-size:0.8rem">${o.completed_by || "—"}</td>
+  <td><span class="badge badge-${o.status}">${o.status}</span></td>
+  <td style="color:var(--text2);font-size:0.8rem">${fmtDate(o.created_at)}</td>
+  <td style="color:var(--text2);font-size:0.8rem">${fmtDate(o.completed_at)}</td>
+</tr>`,
+              )
+              .join("")}</tbody></table>`;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+        }
+      }
+
+      function exportOrdersCSV() {
+        if (!_searchResults.length) {
+          alert("Tìm đơn trước rồi xuất CSV!");
+          return;
+        }
+        const headers = [
+          "ID",
+          "Game",
+          "Package",
+          "Price USD",
+          "Discord ID",
+          "Game Account",
+          "Staff",
+          "Status",
+          "Created",
+          "Completed",
+          "Note",
+        ];
+        const rows = _searchResults.map((o) =>
+          [
+            o.id,
+            o.game_id,
+            o.package_name,
+            o.price_usd,
+            o.discord_id,
+            o.game_account || "",
+            o.completed_by || "",
+            o.status,
+            o.created_at || "",
+            o.completed_at || "",
+            o.delivery_note || "",
+          ]
+            .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+            .join(","),
+        );
+        const csv = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob(["\uFEFF" + csv], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `orders_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+      }
+
+      // ── Boot ───────────────────────────────────────────────────────────────────
+      initApp().catch(() => {
+        document.getElementById("auth-screen").style.display = "flex";
+      });
+
+      // Auto-refresh orders every 30s when on orders page
+      setInterval(() => {
+        if (document.getElementById("page-orders").classList.contains("active"))
+          loadOrders();
+        if (
+          document.getElementById("page-my-orders").classList.contains("active")
+        )
+          loadMyOrders();
+      }, 30000);
+    </script>
+  </body>
+</html>

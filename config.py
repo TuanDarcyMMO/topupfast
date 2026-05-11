@@ -6,9 +6,18 @@ load_dotenv()
 # ---- Discord ----
 DISCORD_TOKEN: str = os.getenv("DISCORD_TOKEN", "")
 DISCORD_GUILD_ID: int = int(os.getenv("DISCORD_GUILD_ID", 0) or 0)
+# ID of the OLD server — used to look up roles when syncing members to the new server
+OLD_GUILD_ID: int = int(os.getenv("OLD_GUILD_ID", 0) or 0)
+# Extra guilds bot joins ONLY to sync members to DB (no commands available there)
+# Comma-separated list of guild IDs, e.g. "123456,789012"
+EXTRA_SYNC_GUILD_IDS: list[int] = [
+    int(gid.strip()) for gid in os.getenv("EXTRA_SYNC_GUILD_IDS", "").split(",")
+    if gid.strip().isdigit()
+]
 WELCOME_CHANNEL_ID: int = int(os.getenv("WELCOME_CHANNEL_ID", 0) or 0)
 RULES_CHANNEL_ID: int = int(os.getenv("RULES_CHANNEL_ID", 0) or 0)
 VERIFY_CHANNEL_ID: int = int(os.getenv("VERIFY_CHANNEL_ID", 0) or 0)
+GENERAL_CHANNEL_ID: int = int(os.getenv("GENERAL_CHANNEL_ID", 0) or 0)  # channel to send periodic reminders
 
 # ---- SePay ----
 SEPAY_API_TOKEN: str = os.getenv("SEPAY_API_TOKEN", "")
@@ -16,15 +25,11 @@ SEPAY_BANK_CODE: str = os.getenv("SEPAY_BANK_CODE", "BIDV")
 SEPAY_ACCOUNT_NUMBER: str = os.getenv("SEPAY_ACCOUNT_NUMBER", "")
 SEPAY_ACCOUNT_NAME: str = os.getenv("SEPAY_ACCOUNT_NAME", "")
 
-# ---- CoinRemitter ----
-COINREMITTER_API_KEY: str = os.getenv("COINREMITTER_API_KEY", "")
-COINREMITTER_PASSWORD: str = os.getenv("COINREMITTER_PASSWORD", "")
-COINREMITTER_WALLETS: dict[str, str] = {
-    "LTC":  os.getenv("COINREMITTER_WALLET_LTC", ""),
-    "BTC":  os.getenv("COINREMITTER_WALLET_BTC", ""),
-    "ETH":  os.getenv("COINREMITTER_WALLET_ETH", ""),
-    "USDT": os.getenv("COINREMITTER_WALLET_USDT", ""),
-}
+# ---- NowPayments (Crypto) ----
+NOWPAYMENTS_API_KEY: str = os.getenv("NOWPAYMENTS_API_KEY", "")
+NOWPAYMENTS_IPN_SECRET: str = os.getenv("NOWPAYMENTS_IPN_SECRET", "")
+# Coins enabled - thêm coin khác vào đây sau khi test LTC ổn
+NOWPAYMENTS_COINS: list[str] = [c.strip().upper() for c in os.getenv("NOWPAYMENTS_COINS", "LTC").split(",") if c.strip()]
 
 # ---- Webhook ----
 WEBHOOK_HOST: str = os.getenv("WEBHOOK_HOST", "0.0.0.0")
