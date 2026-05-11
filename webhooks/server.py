@@ -122,6 +122,15 @@ class WebhookServer:
         # Orders filtered (admin)
         self.app.router.add_get("/api/orders/export",                self._api_orders_export)        # Serve dashboard
         self.app.router.add_post("/api/logout",                   self._api_logout)
+        # Games & Packages CRUD (admin only)
+        self.app.router.add_get("/api/games",                        self._api_games_list)
+        self.app.router.add_post("/api/games",                       self._api_games_create)
+        self.app.router.add_patch("/api/games/{id}",                 self._api_games_update)
+        self.app.router.add_delete("/api/games/{id}",                self._api_games_delete)
+        self.app.router.add_get("/api/games/{id}/packages",          self._api_packages_list)
+        self.app.router.add_post("/api/games/{id}/packages",         self._api_packages_create)
+        self.app.router.add_patch("/api/packages/{id}",              self._api_packages_update)
+        self.app.router.add_delete("/api/packages/{id}",             self._api_packages_delete)
         self.app.router.add_get("/dashboard", self._dashboard_html)
         self.app.router.add_get("/dashboard/", self._dashboard_html)
 
@@ -991,6 +1000,128 @@ class WebhookServer:
                 await user.send(embed=embed)
         except Exception:
             logger.exception("Could not DM staff about withdrawal rejection")
+
+    # ─────────────────────────────────────── Games & Packages CRUD (admin) ──
+
+    async def _api_games_list(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        games = await db.get_all_games(include_inactive=True)
+        return aiohttp.web.json_response(games)
+
+    async def _api_games_create(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        try:
+            body = await request.json()
+        except Exception:
+            raise aiohttp.web.HTTPBadRequest(reason="Invalid JSON")
+        game_id = (body.get("id") or "").strip().lower().replace(" ", "_")
+        name    = (body.get("name") or "").strip()
+        if not game_id or not name:
+            raise aiohttp.web.HTTPBadRequest(reason="id và name là bắt buộc")
+        try:
+            game = await db.create_game(
+                game_id=game_id,
+                name=name,
+                emoji=body.get("emoji") or "🎮",
+                icon_url=body.get("icon_url") or "",
+                platform=body.get("platform") or "all",
+                sort_order=int(body.get("sort_order") or 0),
+            )
+        except Exception as e:
+            raise aiohttp.web.HTTPConflict(reason=str(e))
+        return aiohttp.web.json_response(game, status=201)
+
+    async def _api_games_update(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        game_id = request.match_info["id"]
+        try:
+            body = await request.json()
+        except Exception:
+            raise aiohttp.web.HTTPBadRequest(reason="Invalid JSON")
+        allowed = {"name", "emoji", "icon_url", "platform", "active", "sort_order"}
+        fields = {k: v for k, v in body.items() if k in allowed}
+        if not fields:
+            raise aiohttp.web.HTTPBadRequest(reason="Không có trường hợp lệ")
+        await db.update_game(game_id, **fields)
+        return aiohttp.web.json_response({"ok": True})
+
+    async def _api_games_delete(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        game_id = request.match_info["id"]
+        await db.delete_game(game_id)
+        return aiohttp.web.json_response({"ok": True})
+
+    async def _api_packages_list(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        game_id = request.match_info["id"]
+        packages = await db.get_packages_by_game(game_id, include_inactive=True)
+        return aiohttp.web.json_response(packages)
+
+    async def _api_packages_create(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        game_id = request.match_info["id"]
+        try:
+            body = await request.json()
+        except Exception:
+            raise aiohttp.web.HTTPBadRequest(reason="Invalid JSON")
+        name     = (body.get("name") or "").strip()
+        category = (body.get("category") or "").strip().lower().replace(" ", "_")
+        price    = body.get("price_usd")
+        if not name or not category or price is None:
+            raise aiohttp.web.HTTPBadRequest(reason="name, category, price_usd là bắt buộc")
+        # Tự tạo ID: {game_id}.{category}.{slug(name)}
+        import re
+        slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+        pkg_id = f"{game_id}.{category}.{slug}"
+        try:
+            pkg = await db.create_package(
+                package_id=pkg_id,
+                game_id=game_id,
+                category=category,
+                name=name,
+                price_usd=float(price),
+                description=body.get("description") or "",
+                sort_order=int(body.get("sort_order") or 0),
+            )
+        except Exception as e:
+            raise aiohttp.web.HTTPConflict(reason=str(e))
+        return aiohttp.web.json_response(pkg, status=201)
+
+    async def _api_packages_update(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        pkg_id = request.match_info["id"]
+        try:
+            body = await request.json()
+        except Exception:
+            raise aiohttp.web.HTTPBadRequest(reason="Invalid JSON")
+        allowed = {"name", "category", "price_usd", "description", "active", "sort_order"}
+        fields = {k: v for k, v in body.items() if k in allowed}
+        if not fields:
+            raise aiohttp.web.HTTPBadRequest(reason="Không có trường hợp lệ")
+        await db.update_package(pkg_id, **fields)
+        return aiohttp.web.json_response({"ok": True})
+
+    async def _api_packages_delete(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        sess = await _check_admin(request)
+        if isinstance(sess, aiohttp.web.Response):
+            return sess
+        pkg_id = request.match_info["id"]
+        await db.delete_package(pkg_id)
+        return aiohttp.web.json_response({"ok": True})
 
     async def start(self) -> None:
         # Custom access log format: hide User-Agent, only show method/path/status/size

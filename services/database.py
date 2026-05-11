@@ -1,4 +1,4 @@
-﻿import random
+import random
 import string
 from datetime import datetime, timedelta
 
@@ -417,6 +417,78 @@ async def delete_staff_bank_account(account_id: int, discord_id: str) -> None:
     """Xóa tài khoản ngân hàng (chỉ của chính staff đó)."""
     params = {"id": f"eq.{account_id}", "staff_discord_id": f"eq.{discord_id}"}
     async with _sess().delete(f"{_REST}/staff_bank_accounts", params=params) as r:
+        r.raise_for_status()
+
+
+# ================================================================== Games ==
+
+async def get_all_games(include_inactive: bool = False) -> list:
+    params: dict = {"order": "sort_order.asc,created_at.asc"}
+    if not include_inactive:
+        params["active"] = "eq.true"
+    return await _get("games", params)
+
+
+async def create_game(game_id: str, name: str, emoji: str = "🎮",
+                      icon_url: str = "", platform: str = "all",
+                      sort_order: int = 0) -> dict:
+    return await _post("games", {
+        "id": game_id,
+        "name": name,
+        "emoji": emoji,
+        "icon_url": icon_url or None,
+        "platform": platform,
+        "active": True,
+        "sort_order": sort_order,
+    })
+
+
+async def update_game(game_id: str, **fields) -> None:
+    if not fields:
+        return
+    async with _sess().patch(f"{_REST}/games", params={"id": f"eq.{game_id}"}, json=fields) as r:
+        r.raise_for_status()
+
+
+async def delete_game(game_id: str) -> None:
+    """Xóa game (cascade xóa packages liên quan)."""
+    async with _sess().delete(f"{_REST}/games", params={"id": f"eq.{game_id}"}) as r:
+        r.raise_for_status()
+
+
+# =============================================================== Packages ==
+
+async def get_packages_by_game(game_id: str, include_inactive: bool = False) -> list:
+    params: dict = {"game_id": f"eq.{game_id}", "order": "sort_order.asc,created_at.asc"}
+    if not include_inactive:
+        params["active"] = "eq.true"
+    return await _get("packages", params)
+
+
+async def create_package(package_id: str, game_id: str, category: str,
+                         name: str, price_usd: float,
+                         description: str = "", sort_order: int = 0) -> dict:
+    return await _post("packages", {
+        "id": package_id,
+        "game_id": game_id,
+        "category": category,
+        "name": name,
+        "price_usd": price_usd,
+        "description": description or "",
+        "active": True,
+        "sort_order": sort_order,
+    })
+
+
+async def update_package(package_id: str, **fields) -> None:
+    if not fields:
+        return
+    async with _sess().patch(f"{_REST}/packages", params={"id": f"eq.{package_id}"}, json=fields) as r:
+        r.raise_for_status()
+
+
+async def delete_package(package_id: str) -> None:
+    async with _sess().delete(f"{_REST}/packages", params={"id": f"eq.{package_id}"}) as r:
         r.raise_for_status()
 
 
