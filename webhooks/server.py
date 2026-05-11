@@ -1094,6 +1094,7 @@ class WebhookServer:
                 price_usd=float(price),
                 description=body.get("description") or "",
                 sort_order=int(body.get("sort_order") or 0),
+                platform=body.get("platform") or "all",
             )
         except Exception as e:
             raise aiohttp.web.HTTPConflict(reason=str(e))
@@ -1108,7 +1109,7 @@ class WebhookServer:
             body = await request.json()
         except Exception:
             raise aiohttp.web.HTTPBadRequest(reason="Invalid JSON")
-        allowed = {"name", "category", "price_usd", "description", "active", "sort_order"}
+        allowed = {"name", "category", "price_usd", "description", "active", "sort_order", "platform"}
         fields = {k: v for k, v in body.items() if k in allowed}
         if not fields:
             raise aiohttp.web.HTTPBadRequest(reason="Không có trường hợp lệ")

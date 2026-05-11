@@ -467,7 +467,8 @@ async def get_packages_by_game(game_id: str, include_inactive: bool = False) -> 
 
 async def create_package(package_id: str, game_id: str, category: str,
                          name: str, price_usd: float,
-                         description: str = "", sort_order: int = 0) -> dict:
+                         description: str = "", sort_order: int = 0,
+                         platform: str = "all") -> dict:
     return await _post("packages", {
         "id": package_id,
         "game_id": game_id,
@@ -477,6 +478,7 @@ async def create_package(package_id: str, game_id: str, category: str,
         "description": description or "",
         "active": True,
         "sort_order": sort_order,
+        "platform": platform,
     })
 
 

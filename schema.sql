@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS packages (
     name        TEXT    NOT NULL,               -- '400 Robux'
     price_usd   FLOAT   NOT NULL,
     description TEXT    NOT NULL DEFAULT '',
+    platform    TEXT    NOT NULL DEFAULT 'all' CHECK(platform IN ('all','android','ios','pc')),
     active      BOOLEAN NOT NULL DEFAULT TRUE,
     sort_order  INT     NOT NULL DEFAULT 0,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()

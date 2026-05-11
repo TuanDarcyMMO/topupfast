@@ -485,16 +485,73 @@
       }
 
       /* ── Responsive ───────────────────────────────── */
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
         .sidebar {
           width: 100%;
           height: auto;
           position: relative;
-          flex-direction: row;
-          flex-wrap: wrap;
+          flex-direction: column;
+          padding: 12px 0;
+        }
+        .sidebar-bottom {
+          padding: 12px 16px;
+          margin-top: 8px;
         }
         .main {
           margin-left: 0;
+          padding: 16px;
+        }
+        .page-title {
+          font-size: 1.15rem;
+        }
+        /* Tables scroll horizontally on mobile */
+        .table-wrap {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        table {
+          min-width: 560px;
+        }
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .filter-bar {
+          flex-wrap: wrap;
+        }
+        .table-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .nav-item {
+          padding: 10px 16px;
+          font-size: 0.88rem;
+        }
+        td .btn {
+          padding: 5px 10px;
+          font-size: 0.78rem;
+          white-space: nowrap;
+        }
+        td {
+          font-size: 0.82rem;
+          padding: 10px 12px;
+        }
+        /* Modal full width */
+        .modal-bg > .modal,
+        .modal-bg > div > .modal {
+          width: calc(100vw - 32px) !important;
+          max-width: 100% !important;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+      }
+      @media (max-width: 480px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+        .auth-card {
+          width: 100%;
+          margin: 16px;
+          padding: 28px 20px;
         }
       }
     </style>
@@ -526,7 +583,9 @@
         <button class="btn btn-primary btn-full" onclick="doLogin()">
           Sign In
         </button>
-        <div id="auth-error">❌ <span id="auth-error-msg">Sai tên đăng nhập hoặc mật khẩu.</span></div>
+        <div id="auth-error">
+          ❌ <span id="auth-error-msg">Sai tên đăng nhập hoặc mật khẩu.</span>
+        </div>
       </div>
     </div>
 
@@ -566,7 +625,12 @@
         >
           <span class="icon">📌</span> My Orders
         </div>
-        <div class="nav-item" onclick="showPage('withdraw')" id="nav-withdraw">
+        <div
+          class="nav-item"
+          onclick="showPage('withdraw')"
+          id="nav-withdraw"
+          style="display: none"
+        >
           <span class="icon">💸</span> Withdraw
           <span
             id="nav-balance-badge"
@@ -660,7 +724,7 @@
 
         <!-- ── My Orders page (all staff) ── -->
         <div class="page" id="page-my-orders">
-          <div class="page-title">📌 Đơn của tôi</div>
+          <div class="page-title">📌My Order</div>
           <div class="table-wrap">
             <div class="table-header">
               <h2>Đơn của tôi</h2>
@@ -998,87 +1062,372 @@
         <!-- ── Games & Packages manager (admin) ── -->
         <div class="page" id="page-games">
           <div class="page-title">🎮 Quản lý Games &amp; Gói nạp</div>
-          <div class="table-wrap" style="margin-bottom:20px">
+          <div class="table-wrap" style="margin-bottom: 20px">
             <div class="table-header">
               <h2>Danh sách Game</h2>
-              <button class="btn btn-primary btn-sm" onclick="openAddGameModal()">+ Thêm Game</button>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddGameModal()"
+              >
+                + Thêm Game
+              </button>
             </div>
-            <div id="games-list-wrap"><div class="empty-state">Đang tải...</div></div>
+            <div id="games-list-wrap">
+              <div class="empty-state">Đang tải...</div>
+            </div>
           </div>
-          <div class="table-wrap" id="packages-section" style="display:none">
+          <div class="table-wrap" id="packages-section" style="display: none">
             <div class="table-header">
-              <h2>Gói nạp của: <span id="packages-game-name" style="color:var(--primary)"></span></h2>
-              <button class="btn btn-primary btn-sm" onclick="openAddPackageModal()">+ Thêm Gói</button>
-              <button class="btn btn-sm" onclick="closePackagesSection()" style="margin-left:auto">✕ Đóng</button>
+              <h2>
+                Gói nạp của:
+                <span
+                  id="packages-game-name"
+                  style="color: var(--primary)"
+                ></span>
+              </h2>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddPackageModal()"
+              >
+                + Thêm Gói
+              </button>
+              <button
+                class="btn btn-sm"
+                onclick="closePackagesSection()"
+                style="margin-left: auto"
+              >
+                ✕ Đóng
+              </button>
             </div>
-            <div id="packages-list-wrap"><div class="empty-state">Chọn game để xem gói.</div></div>
+            <div id="packages-list-wrap">
+              <div class="empty-state">Chọn game để xem gói.</div>
+            </div>
           </div>
         </div>
       </main>
     </div>
 
     <!-- ── Game modal ── -->
-    <div class="modal-bg" id="game-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
-      <div class="modal" style="max-width:480px;width:90%;background:var(--surface);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:14px">
+    <div
+      class="modal-bg"
+      id="game-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        class="modal"
+        style="
+          max-width: 480px;
+          width: 90%;
+          background: var(--surface);
+          border-radius: 16px;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        "
+      >
         <h3 id="game-modal-title">➕ Thêm Game</h3>
-        <label style="font-size:.8rem;color:var(--text2)">ID Game (chữ thường, không dấu) *
-          <input id="game-id-field" type="text" placeholder="vd: roblox" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >ID Game (chữ thường, không dấu) *
+          <input
+            id="game-id-field"
+            type="text"
+            placeholder="vd: roblox"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Tên hiển thị *
-          <input id="game-name-field" type="text" placeholder="vd: Roblox" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Tên hiển thị *
+          <input
+            id="game-name-field"
+            type="text"
+            placeholder="vd: Roblox"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Emoji
-          <input id="game-emoji-field" type="text" placeholder="🎮" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Emoji
+          <input
+            id="game-emoji-field"
+            type="text"
+            placeholder="🎮"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">URL ảnh icon (để trống nếu chưa có)
-          <input id="game-icon-url-field" type="text" placeholder="https://..." style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >URL ảnh icon (để trống nếu chưa có)
+          <input
+            id="game-icon-url-field"
+            type="text"
+            placeholder="https://..."
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Platform
-          <select id="game-platform-field" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)">
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Platform
+          <select
+            id="game-platform-field"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          >
             <option value="all">All (Android + iOS)</option>
             <option value="ios">iOS only</option>
           </select>
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Thứ tự sắp xếp
-          <input id="game-sort-field" type="number" value="0" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Thứ tự sắp xếp
+          <input
+            id="game-sort-field"
+            type="number"
+            value="0"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:.9rem">
-          <input id="game-active-field" type="checkbox" checked /> Active (hiển thị cho người dùng)
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+          "
+        >
+          <input id="game-active-field" type="checkbox" checked /> Active (hiển
+          thị cho người dùng)
         </label>
-        <p id="game-modal-err" style="color:var(--danger);font-size:.85rem;margin:0"></p>
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-sm" onclick="document.getElementById('game-modal').style.display='none'">Hủy</button>
-          <button class="btn btn-primary btn-sm" onclick="saveGame()">💾 Lưu</button>
+        <p
+          id="game-modal-err"
+          style="color: var(--danger); font-size: 0.85rem; margin: 0"
+        ></p>
+        <div style="display: flex; gap: 10px; justify-content: flex-end">
+          <button
+            class="btn btn-sm"
+            onclick="
+              document.getElementById('game-modal').style.display = 'none'
+            "
+          >
+            Hủy
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="saveGame()">
+            💾 Lưu
+          </button>
         </div>
       </div>
     </div>
 
     <!-- ── Package modal ── -->
-    <div class="modal-bg" id="pkg-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
-      <div class="modal" style="max-width:480px;width:90%;background:var(--surface);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:14px">
+    <div
+      class="modal-bg"
+      id="pkg-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        class="modal"
+        style="
+          max-width: 480px;
+          width: 90%;
+          background: var(--surface);
+          border-radius: 16px;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        "
+      >
         <h3 id="pkg-modal-title">➕ Thêm Gói</h3>
-        <label style="font-size:.8rem;color:var(--text2)">Tên gói *
-          <input id="pkg-name-field" type="text" placeholder="vd: 400 Robux" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Tên gói *
+          <input
+            id="pkg-name-field"
+            type="text"
+            placeholder="vd: 400 Robux"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Category * (chữ thường, không dấu)
-          <input id="pkg-category-field" type="text" placeholder="vd: robux, diamond, crystal" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Category * (chữ thường, không dấu)
+          <input
+            id="pkg-category-field"
+            type="text"
+            placeholder="vd: robux, diamond, crystal"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Giá (USD) *
-          <input id="pkg-price-field" type="number" step="0.01" placeholder="vd: 4.99" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Giá (USD) *
+          <input
+            id="pkg-price-field"
+            type="number"
+            step="0.01"
+            placeholder="vd: 4.99"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Mô tả (tuỳ chọn)
-          <input id="pkg-desc-field" type="text" placeholder="" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Mô tả (tuỳ chọn)
+          <input
+            id="pkg-desc-field"
+            type="text"
+            placeholder=""
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="font-size:.8rem;color:var(--text2)">Thứ tự sắp xếp
-          <input id="pkg-sort-field" type="number" value="0" style="width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" />
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Thứ tự sắp xếp
+          <input
+            id="pkg-sort-field"
+            type="number"
+            value="0"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
         </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:.9rem">
+        <label style="font-size: 0.8rem; color: var(--text2)"
+          >Nạp trên nền tảng
+          <select
+            id="pkg-platform-field"
+            style="
+              width: 100%;
+              margin-top: 4px;
+              padding: 8px 12px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              background: var(--surface);
+              color: var(--text);
+            "
+          >
+            <option value="all">Tất cả (Android + iOS)</option>
+            <option value="android">Android</option>
+            <option value="ios">iOS</option>
+          </select>
+        </label>
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+          "
+        >
           <input id="pkg-active-field" type="checkbox" checked /> Active
         </label>
-        <p id="pkg-modal-err" style="color:var(--danger);font-size:.85rem;margin:0"></p>
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-sm" onclick="document.getElementById('pkg-modal').style.display='none'">Hủy</button>
-          <button class="btn btn-primary btn-sm" onclick="savePackage()">💾 Lưu</button>
+        <p
+          id="pkg-modal-err"
+          style="color: var(--danger); font-size: 0.85rem; margin: 0"
+        ></p>
+        <div style="display: flex; gap: 10px; justify-content: flex-end">
+          <button
+            class="btn btn-sm"
+            onclick="
+              document.getElementById('pkg-modal').style.display = 'none'
+            "
+          >
+            Hủy
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="savePackage()">
+            💾 Lưu
+          </button>
         </div>
       </div>
     </div>
@@ -1528,9 +1877,11 @@
             "flex";
           document.getElementById("nav-orders-search").style.display = "flex";
           document.getElementById("nav-games").style.display = "flex";
+        } else {
+          // staff only: My Orders & Withdraw
+          document.getElementById("nav-my-orders").style.display = "flex";
+          document.getElementById("nav-withdraw").style.display = "flex";
         }
-        // My Orders: visible to all staff
-        document.getElementById("nav-my-orders").style.display = "flex";
 
         // Load and show commission balance in sidebar
         loadBalanceSidebar();
@@ -2345,10 +2696,11 @@
             wrap.innerHTML = '<div class="empty-state">Chưa có game nào.</div>';
             return;
           }
-          let html = '<table class="orders-table"><thead><tr>'
-            + '<th>ID</th><th>Ảnh</th><th>Tên</th><th>Emoji</th>'
-            + '<th>Platform</th><th>Thứ tự</th><th>Active</th><th>Hành động</th>'
-            + '</tr></thead><tbody>';
+          let html =
+            '<table class="orders-table"><thead><tr>' +
+            "<th>ID</th><th>Ảnh</th><th>Tên</th><th>Emoji</th>" +
+            "<th>Platform</th><th>Thứ tự</th><th>Active</th><th>Hành động</th>" +
+            "</tr></thead><tbody>";
           for (const g of games) {
             const img = g.icon_url
               ? `<img src="${g.icon_url}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" />`
@@ -2371,7 +2723,7 @@
               </td>
             </tr>`;
           }
-          html += '</tbody></table>';
+          html += "</tbody></table>";
           wrap.innerHTML = html;
         } catch (e) {
           wrap.innerHTML = `<div class="empty-state">Lỗi: ${e.message}</div>`;
@@ -2383,7 +2735,9 @@
         document.getElementById("packages-game-name").textContent = gameName;
         document.getElementById("packages-section").style.display = "block";
         await loadPackages();
-        document.getElementById("packages-section").scrollIntoView({ behavior: "smooth" });
+        document
+          .getElementById("packages-section")
+          .scrollIntoView({ behavior: "smooth" });
       }
 
       function closePackagesSection() {
@@ -2395,15 +2749,19 @@
         const wrap = document.getElementById("packages-list-wrap");
         wrap.innerHTML = '<div class="empty-state">Đang tải...</div>';
         try {
-          const pkgs = await api("GET", `/api/games/${_activeGameForPkg}/packages`);
+          const pkgs = await api(
+            "GET",
+            `/api/games/${_activeGameForPkg}/packages`,
+          );
           if (!pkgs || pkgs.length === 0) {
             wrap.innerHTML = '<div class="empty-state">Chưa có gói nào.</div>';
             return;
           }
-          let html = '<table class="orders-table"><thead><tr>'
-            + '<th>ID</th><th>Tên</th><th>Category</th><th>Giá (USD)</th>'
-            + '<th>Mô tả</th><th>Thứ tự</th><th>Active</th><th>Hành động</th>'
-            + '</tr></thead><tbody>';
+          let html =
+            '<table class="orders-table"><thead><tr>' +
+            "<th>ID</th><th>Tên</th><th>Category</th><th>Giá (USD)</th>" +
+            "<th>Mô tả</th><th>Thứ tự</th><th>Active</th><th>Hành động</th>" +
+            "</tr></thead><tbody>";
           for (const p of pkgs) {
             const active = p.active
               ? '<span style="color:var(--green)">✔</span>'
@@ -2413,7 +2771,7 @@
               <td>${p.name}</td>
               <td><code>${p.category}</code></td>
               <td>$${Number(p.price_usd).toFixed(2)}</td>
-              <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description || '—'}</td>
+              <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description || "—"}</td>
               <td>${p.sort_order}</td>
               <td>${active}</td>
               <td style="display:flex;gap:6px">
@@ -2422,7 +2780,7 @@
               </td>
             </tr>`;
           }
-          html += '</tbody></table>';
+          html += "</tbody></table>";
           wrap.innerHTML = html;
         } catch (e) {
           wrap.innerHTML = `<div class="empty-state">Lỗi: ${e.message}</div>`;
@@ -2432,7 +2790,8 @@
       // ── Add / Edit Game modal ──
       function openAddGameModal() {
         _editingGameId = null;
-        document.getElementById("game-modal-title").textContent = "➕ Thêm Game";
+        document.getElementById("game-modal-title").textContent =
+          "➕ Thêm Game";
         document.getElementById("game-id-field").value = "";
         document.getElementById("game-id-field").disabled = false;
         document.getElementById("game-name-field").value = "";
@@ -2449,15 +2808,17 @@
         _editingGameId = gameId;
         const rows = document.querySelectorAll("#games-list-wrap tbody tr");
         // Re-fetch to get latest data
-        api("GET", "/api/games").then(games => {
-          const g = games.find(x => x.id === gameId);
+        api("GET", "/api/games").then((games) => {
+          const g = games.find((x) => x.id === gameId);
           if (!g) return;
-          document.getElementById("game-modal-title").textContent = "✏️ Sửa Game";
+          document.getElementById("game-modal-title").textContent =
+            "✏️ Sửa Game";
           document.getElementById("game-id-field").value = g.id;
           document.getElementById("game-id-field").disabled = true;
           document.getElementById("game-name-field").value = g.name;
           document.getElementById("game-emoji-field").value = g.emoji;
-          document.getElementById("game-icon-url-field").value = g.icon_url || "";
+          document.getElementById("game-icon-url-field").value =
+            g.icon_url || "";
           document.getElementById("game-platform-field").value = g.platform;
           document.getElementById("game-sort-field").value = g.sort_order;
           document.getElementById("game-active-field").checked = g.active;
@@ -2467,21 +2828,45 @@
       }
 
       async function saveGame() {
-        const id       = document.getElementById("game-id-field").value.trim();
-        const name     = document.getElementById("game-name-field").value.trim();
-        const emoji    = document.getElementById("game-emoji-field").value.trim() || "🎮";
-        const icon_url = document.getElementById("game-icon-url-field").value.trim();
+        const id = document.getElementById("game-id-field").value.trim();
+        const name = document.getElementById("game-name-field").value.trim();
+        const emoji =
+          document.getElementById("game-emoji-field").value.trim() || "🎮";
+        const icon_url = document
+          .getElementById("game-icon-url-field")
+          .value.trim();
         const platform = document.getElementById("game-platform-field").value;
-        const sort_order = parseInt(document.getElementById("game-sort-field").value) || 0;
-        const active   = document.getElementById("game-active-field").checked;
-        const errEl    = document.getElementById("game-modal-err");
-        if (!name) { errEl.textContent = "Tên game không được trống."; return; }
+        const sort_order =
+          parseInt(document.getElementById("game-sort-field").value) || 0;
+        const active = document.getElementById("game-active-field").checked;
+        const errEl = document.getElementById("game-modal-err");
+        if (!name) {
+          errEl.textContent = "Tên game không được trống.";
+          return;
+        }
         try {
           if (_editingGameId) {
-            await api("PATCH", `/api/games/${_editingGameId}`, { name, emoji, icon_url, platform, sort_order, active });
+            await api("PATCH", `/api/games/${_editingGameId}`, {
+              name,
+              emoji,
+              icon_url,
+              platform,
+              sort_order,
+              active,
+            });
           } else {
-            if (!id) { errEl.textContent = "ID không được trống."; return; }
-            await api("POST", "/api/games", { id, name, emoji, icon_url, platform, sort_order });
+            if (!id) {
+              errEl.textContent = "ID không được trống.";
+              return;
+            }
+            await api("POST", "/api/games", {
+              id,
+              name,
+              emoji,
+              icon_url,
+              platform,
+              sort_order,
+            });
           }
           document.getElementById("game-modal").style.display = "none";
           loadGames();
@@ -2491,7 +2876,12 @@
       }
 
       async function deleteGame(gameId, gameName) {
-        if (!confirm(`Xóa game "${gameName}" và tất cả gói của nó?\nHành động này không thể hoàn tác.`)) return;
+        if (
+          !confirm(
+            `Xóa game "${gameName}" và tất cả gói của nó?\nHành động này không thể hoàn tác.`,
+          )
+        )
+          return;
         try {
           await api("DELETE", `/api/games/${gameId}`);
           closePackagesSection();
@@ -2511,6 +2901,7 @@
         document.getElementById("pkg-price-field").value = "";
         document.getElementById("pkg-desc-field").value = "";
         document.getElementById("pkg-sort-field").value = "0";
+        document.getElementById("pkg-platform-field").value = "all";
         document.getElementById("pkg-active-field").checked = true;
         document.getElementById("pkg-modal-err").textContent = "";
         document.getElementById("pkg-modal").style.display = "flex";
@@ -2518,8 +2909,8 @@
 
       function openEditPkgModal(pkgId) {
         _editingPkgId = pkgId;
-        api("GET", `/api/games/${_activeGameForPkg}/packages`).then(pkgs => {
-          const p = pkgs.find(x => x.id === pkgId);
+        api("GET", `/api/games/${_activeGameForPkg}/packages`).then((pkgs) => {
+          const p = pkgs.find((x) => x.id === pkgId);
           if (!p) return;
           document.getElementById("pkg-modal-title").textContent = "✏️ Sửa Gói";
           document.getElementById("pkg-name-field").value = p.name;
@@ -2527,6 +2918,8 @@
           document.getElementById("pkg-price-field").value = p.price_usd;
           document.getElementById("pkg-desc-field").value = p.description || "";
           document.getElementById("pkg-sort-field").value = p.sort_order;
+          document.getElementById("pkg-platform-field").value =
+            p.platform || "all";
           document.getElementById("pkg-active-field").checked = p.active;
           document.getElementById("pkg-modal-err").textContent = "";
           document.getElementById("pkg-modal").style.display = "flex";
@@ -2534,21 +2927,44 @@
       }
 
       async function savePackage() {
-        const name     = document.getElementById("pkg-name-field").value.trim();
-        const category = document.getElementById("pkg-category-field").value.trim().toLowerCase();
-        const price    = parseFloat(document.getElementById("pkg-price-field").value);
-        const desc     = document.getElementById("pkg-desc-field").value.trim();
-        const sort_order = parseInt(document.getElementById("pkg-sort-field").value) || 0;
-        const active   = document.getElementById("pkg-active-field").checked;
-        const errEl    = document.getElementById("pkg-modal-err");
+        const name = document.getElementById("pkg-name-field").value.trim();
+        const category = document
+          .getElementById("pkg-category-field")
+          .value.trim()
+          .toLowerCase();
+        const price = parseFloat(
+          document.getElementById("pkg-price-field").value,
+        );
+        const desc = document.getElementById("pkg-desc-field").value.trim();
+        const sort_order =
+          parseInt(document.getElementById("pkg-sort-field").value) || 0;
+        const platform = document.getElementById("pkg-platform-field").value;
+        const active = document.getElementById("pkg-active-field").checked;
+        const errEl = document.getElementById("pkg-modal-err");
         if (!name || !category || isNaN(price)) {
-          errEl.textContent = "Tên, category và giá là bắt buộc."; return;
+          errEl.textContent = "Tên, category và giá là bắt buộc.";
+          return;
         }
         try {
           if (_editingPkgId) {
-            await api("PATCH", `/api/packages/${_editingPkgId}`, { name, category, price_usd: price, description: desc, sort_order, active });
+            await api("PATCH", `/api/packages/${_editingPkgId}`, {
+              name,
+              category,
+              price_usd: price,
+              description: desc,
+              sort_order,
+              platform,
+              active,
+            });
           } else {
-            await api("POST", `/api/games/${_activeGameForPkg}/packages`, { name, category, price_usd: price, description: desc, sort_order });
+            await api("POST", `/api/games/${_activeGameForPkg}/packages`, {
+              name,
+              category,
+              price_usd: price,
+              description: desc,
+              sort_order,
+              platform,
+            });
           }
           document.getElementById("pkg-modal").style.display = "none";
           loadPackages();
