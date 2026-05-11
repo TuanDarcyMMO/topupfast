@@ -526,7 +526,7 @@
         <button class="btn btn-primary btn-full" onclick="doLogin()">
           Sign In
         </button>
-        <div id="auth-error">❌ Invalid username or password.</div>
+        <div id="auth-error">❌ <span id="auth-error-msg">Sai tên đăng nhập hoặc mật khẩu.</span></div>
       </div>
     </div>
 
@@ -1487,6 +1487,9 @@
             body: JSON.stringify({ username, password }),
           });
           if (!r.ok) {
+            const errData = await r.json().catch(() => ({}));
+            document.getElementById("auth-error-msg").textContent =
+              errData.error || "Sai tên đăng nhập hoặc mật khẩu.";
             errEl.style.display = "block";
             return;
           }

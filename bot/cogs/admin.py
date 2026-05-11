@@ -739,7 +739,12 @@ class AdminCog(commands.Cog):
         member="Discord member to add as staff",
         username="Login username for the dashboard",
         password="Login password for the dashboard",
+        role="Role: staff (default) or admin (full access)",
     )
+    @app_commands.choices(role=[
+        app_commands.Choice(name="staff", value="staff"),
+        app_commands.Choice(name="admin", value="admin"),
+    ])
     @app_commands.checks.has_role(ROLE_FOUNDER)
     async def add_staff(
         self,
@@ -747,12 +752,13 @@ class AdminCog(commands.Cog):
         member: discord.Member,
         username: str,
         password: str,
+        role: str = "staff",
     ) -> None:
         import bcrypt
         existing = await db.get_staff_by_discord(str(member.id))
         if existing:
             await interaction.response.send_message(
-                f"❌ {member.mention} is already a staff member (`{existing['username']}`).",
+                f"❌ {member.mention} is already a staff member (`{existing['username']}`, role: `{existing['role']}`).",
                 ephemeral=True,
             )
             return
@@ -761,10 +767,11 @@ class AdminCog(commands.Cog):
             discord_id=str(member.id),
             username=username,
             password_hash=password_hash,
-            role="staff",
+            role=role,
         )
+        role_icon = "🛡️" if role == "admin" else "👤"
         await interaction.response.send_message(
-            f"✅ Added **{member.mention}** as staff.\n"
+            f"✅ Added **{member.mention}** as `{role}`. {role_icon}\n"
             f"🔑 Username: `{username}` | Password: `{password}`\n"
             f"🌐 Dashboard: `/dashboard`",
             ephemeral=True,
