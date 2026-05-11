@@ -33,7 +33,8 @@ NOWPAYMENTS_COINS: list[str] = [c.strip().upper() for c in os.getenv("NOWPAYMENT
 
 # ---- Webhook ----
 WEBHOOK_HOST: str = os.getenv("WEBHOOK_HOST", "0.0.0.0")
-WEBHOOK_PORT: int = int(os.getenv("WEBHOOK_PORT", 8080))
+# Railway cung cấp PORT, VPS dùng WEBHOOK_PORT (default 8080)
+WEBHOOK_PORT: int = int(os.getenv("PORT") or os.getenv("WEBHOOK_PORT", 8080))
 WEBHOOK_BASE_URL: str = os.getenv("WEBHOOK_BASE_URL", "http://localhost:8080").rstrip("/")
 
 # ---- Supabase ----
