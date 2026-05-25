@@ -141,6 +141,18 @@ class WebhookServer:
         self.app.router.add_get("/dashboard", self._dashboard_html)
         self.app.router.add_get("/dashboard/", self._dashboard_html)
 
+    async def start(self) -> None:
+        """Khởi động aiohttp server và chạy mãi cho đến khi bị cancel."""
+        runner = aiohttp.web.AppRunner(self.app, access_log=None)
+        await runner.setup()
+        site = aiohttp.web.TCPSite(runner, WEBHOOK_HOST, WEBHOOK_PORT)
+        await site.start()
+        logger.info("WebhookServer đang chạy tại %s:%s", WEBHOOK_HOST, WEBHOOK_PORT)
+        try:
+            await asyncio.Event().wait()   # chạy mãi đến khi task bị cancel
+        finally:
+            await runner.cleanup()
+
     # -------------------------------------------------------------- routes --
 
     async def _health(self, _: aiohttp.web.Request) -> aiohttp.web.Response:
