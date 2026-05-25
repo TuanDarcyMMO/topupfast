@@ -300,30 +300,33 @@ class GameTopUpView(discord.ui.View):
         from bot.i18n import get_locale, tl
         locale = get_locale(interaction.user)
 
+        # Defer ngay lập tức để tránh "Interaction has already been acknowledged" (40060)
+        try:
+            await interaction.response.defer(ephemeral=True)
+        except Exception:
+            pass  # Nếu đã defer rồi thì bỏ qua
+
+        # Lấy ShopCog để ConfirmOrderView có thể gọi _process_delivery
+        shop_cog = interaction.client.cogs.get("ShopCog")
+
         try:
             user = await db.get_user(str(interaction.user.id))
             if not user:
-                await interaction.response.send_message(
-                    tl(locale, 'topup_no_account'),
-                    ephemeral=True,
-                )
+                await interaction.followup.send(tl(locale, 'topup_no_account'), ephemeral=True)
                 return
 
             balance = user.get("balance", 0.0)
             if balance <= 0:
-                await interaction.response.send_message(
-                    tl(locale, 'topup_zero_balance'),
-                    ephemeral=True,
-                )
+                await interaction.followup.send(tl(locale, 'topup_zero_balance'), ephemeral=True)
                 return
             game = await get_game(self.game_id)
             if not game or not game.get("active"):
-                await interaction.response.send_message(tl(locale, 'topup_game_unavailable'), ephemeral=True)
+                await interaction.followup.send(tl(locale, 'topup_game_unavailable'), ephemeral=True)
                 return
 
             categories = await get_categories(self.game_id)
             if not categories:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "⚠️ Game này hiện chưa có gói nạp. Vui lòng ping Admin để thêm gói!" if locale == "vi"
                     else "⚠️ This game has no packages yet. Please ping an Admin to add packages!",
                     ephemeral=True,
@@ -333,10 +336,10 @@ class GameTopUpView(discord.ui.View):
             # Skip game selection — go straight to category / package
             if len(categories) == 1:
                 pkgs = await get_packages(self.game_id, categories[0])
-                view = PackageSelectView(None, game, categories[0], pkgs, balance, locale)
+                view = PackageSelectView(shop_cog, game, categories[0], pkgs, balance, locale)
                 embed = _package_embed(game, categories[0], pkgs, balance, locale)
             else:
-                view = CategorySelectView(None, game, categories, balance, locale)
+                view = CategorySelectView(shop_cog, game, categories, balance, locale)
                 embed = discord.Embed(
                     title=f"{game['emoji']} {game['name']} — {tl(locale, 'topup_select_type')}",
                     description="\n".join(f"• **{c.capitalize()}**" for c in categories),
@@ -345,15 +348,15 @@ class GameTopUpView(discord.ui.View):
                 if game.get("icon_url"):
                     embed.set_thumbnail(url=game["icon_url"])
 
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
         except Exception as exc:
             logger.error(f"GameTopUpView._on_click error: {exc}", exc_info=True)
             msg = "❌ Đã xảy ra lỗi, vui lòng thử lại sau." if locale == "vi" else "❌ An error occurred, please try again later."
             try:
-                await interaction.response.send_message(msg, ephemeral=True)
-            except discord.InteractionResponded:
                 await interaction.followup.send(msg, ephemeral=True)
+            except Exception:
+                pass
 
 
 class AdminCog(commands.Cog):
