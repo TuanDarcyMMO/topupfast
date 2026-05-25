@@ -593,3 +593,48 @@ async def get_order_by_ticket_channel(channel_id: str) -> dict | None:
         "limit": "1",
     })
     return rows[0] if rows else None
+
+
+async def get_chat_inbox(limit: int = 50) -> list:
+    """Trả về danh sách các đơn có tin nhắn chat, kèm tin nhắn cuối và thông tin đơn hàng."""
+    # Lấy tin nhắn gần nhất (không bị block) để biết đơn nào có chat
+    msgs = await _get("chat_messages", {
+        "select": "order_id,content,sender_type,sender_name,created_at",
+        "blocked": "eq.false",
+        "order": "created_at.desc",
+        "limit": "300",
+    })
+    if not msgs:
+        return []
+
+    # Gộp theo order_id, giữ tin nhắn cuối cùng mỗi đơn
+    seen: dict[int, dict] = {}
+    for m in msgs:
+        oid = m["order_id"]
+        if oid not in seen:
+            seen[oid] = m
+
+    if not seen:
+        return []
+
+    # Lấy thông tin đơn hàng cho các order_id đó
+    ids_str = ",".join(str(i) for i in seen)
+    orders = await _get("orders", {
+        "select": "id,game_id,package_name,status,game_account",
+        "id": f"in.({ids_str})",
+    })
+    order_map: dict[int, dict] = {o["id"]: o for o in (orders or [])}
+
+    result = []
+    for oid, last_msg in seen.items():
+        result.append({
+            "order_id": oid,
+            "last_message": last_msg["content"],
+            "last_sender_type": last_msg["sender_type"],
+            "last_sender_name": last_msg.get("sender_name", ""),
+            "last_at": last_msg["created_at"],
+            "order": order_map.get(oid, {}),
+        })
+
+    result.sort(key=lambda x: x["last_at"], reverse=True)
+    return result[:limit]

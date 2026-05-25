@@ -557,70 +557,234 @@
 
       /* ── Chat Panel ───────────────────────────────────────────────── */
       .chat-panel {
-        position: fixed; top: 0; right: -440px; width: 420px; height: 100vh;
-        background: var(--surface); border-left: 1px solid var(--border);
-        display: flex; flex-direction: column; z-index: 200;
-        transition: right 0.3s ease; box-shadow: -4px 0 24px rgba(0,0,0,0.18);
+        position: fixed;
+        top: 0;
+        right: -440px;
+        width: 420px;
+        height: 100vh;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        z-index: 200;
+        transition: right 0.3s ease;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
       }
-      .chat-panel.open { right: 0; }
+      .chat-panel.open {
+        right: 0;
+      }
       .chat-panel-header {
-        padding: 14px 18px; border-bottom: 1px solid var(--border);
-        display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
       }
-      .chat-panel-header h3 { flex: 1; font-size: 0.97rem; margin: 0; }
+      .chat-panel-header h3 {
+        flex: 1;
+        font-size: 0.97rem;
+        margin: 0;
+      }
       .chat-status-dot {
-        width: 8px; height: 8px; border-radius: 50%;
-        background: var(--text2); flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text2);
+        flex-shrink: 0;
       }
-      .chat-status-dot.connected { background: var(--green); }
+      .chat-status-dot.connected {
+        background: var(--green);
+      }
       .chat-messages {
-        flex: 1; overflow-y: auto; padding: 14px 16px;
-        display: flex; flex-direction: column; gap: 10px;
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
       .chat-msg {
-        max-width: 88%; padding: 8px 12px; border-radius: 12px;
-        font-size: 0.875rem; line-height: 1.45; word-break: break-word;
+        max-width: 88%;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        word-break: break-word;
       }
       .chat-msg.customer {
-        background: var(--surface2); align-self: flex-start;
+        background: var(--surface2);
+        align-self: flex-start;
         border-bottom-left-radius: 3px;
       }
       .chat-msg.staff {
-        background: var(--accent); color: #fff; align-self: flex-end;
+        background: var(--accent);
+        color: #fff;
+        align-self: flex-end;
         border-bottom-right-radius: 3px;
       }
       .chat-msg.bot {
-        background: linear-gradient(135deg,#6366f122,#3b82f622);
-        border: 1px solid var(--border); align-self: flex-start;
+        background: linear-gradient(135deg, #6366f122, #3b82f622);
+        border: 1px solid var(--border);
+        align-self: flex-start;
         border-bottom-left-radius: 3px;
       }
       .chat-msg.system {
-        background: transparent; color: var(--text2); font-style: italic;
-        font-size: 0.78rem; align-self: center; text-align: center; max-width: 100%;
+        background: transparent;
+        color: var(--text2);
+        font-style: italic;
+        font-size: 0.78rem;
+        align-self: center;
+        text-align: center;
+        max-width: 100%;
       }
-      .chat-meta { font-size: 0.7rem; opacity: 0.65; margin-bottom: 3px; }
+      .chat-meta {
+        font-size: 0.7rem;
+        opacity: 0.65;
+        margin-bottom: 3px;
+      }
       .chat-input-row {
-        padding: 12px 14px; border-top: 1px solid var(--border);
-        display: flex; gap: 8px; flex-shrink: 0;
+        padding: 12px 14px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
       }
       .chat-input-row textarea {
-        flex: 1; resize: none; padding: 8px 12px; height: 58px;
-        border: 1.5px solid var(--border); border-radius: 8px;
-        background: var(--surface2); color: var(--text);
-        font-size: 0.88rem; font-family: inherit; outline: none;
+        flex: 1;
+        resize: none;
+        padding: 8px 12px;
+        height: 58px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface2);
+        color: var(--text);
+        font-size: 0.88rem;
+        font-family: inherit;
+        outline: none;
         transition: border-color 0.2s;
       }
-      .chat-input-row textarea:focus { border-color: var(--accent); }
+      .chat-input-row textarea:focus {
+        border-color: var(--accent);
+      }
       .chat-overlay {
-        display: none; position: fixed; inset: 0;
-        background: rgba(0,0,0,0.35); z-index: 199;
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 199;
       }
-      .chat-overlay.open { display: block; }
-      .chat-blocked-area { padding: 0 14px; }
+      .chat-overlay.open {
+        display: block;
+      }
+      .chat-blocked-area {
+        padding: 0 14px;
+      }
       .chat-blocked-toast {
-        background: var(--red); color: #fff; padding: 9px 13px;
-        border-radius: 8px; font-size: 0.82rem; margin-bottom: 6px;
+        background: var(--red);
+        color: #fff;
+        padding: 9px 13px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        margin-bottom: 6px;
       }
+
+      /* ── Chat Inbox Tab ───────────────────────────────────────────── */
+      .chat-inbox-layout {
+        display: flex;
+        height: calc(100vh - 130px);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .chat-inbox-list {
+        width: 270px;
+        min-width: 200px;
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        background: var(--surface);
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .chat-inbox-list-header {
+        padding: 12px 14px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .chat-conv-item {
+        padding: 11px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        transition: background 0.15s;
+      }
+      .chat-conv-item:hover { background: var(--surface2); }
+      .chat-conv-item.active { background: var(--blue); color: #fff; }
+      .chat-conv-item.active .chat-conv-time,
+      .chat-conv-item.active .chat-conv-preview { color: rgba(255,255,255,0.75); }
+      .chat-conv-order { font-weight: 600; font-size: 0.83rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+      .chat-conv-preview { font-size: 0.77rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+      .chat-conv-time { font-size: 0.72rem; color: var(--text2); }
+      .chat-inbox-view {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        background: var(--bg);
+      }
+      .chat-inbox-view-header {
+        padding: 13px 18px;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface);
+        flex-shrink: 0;
+      }
+      .chat-inbox-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .chat-inbox-empty-state {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text2);
+        font-size: 0.9rem;
+      }
+      .chat-inbox-input-row {
+        padding: 10px 14px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        background: var(--surface);
+        flex-shrink: 0;
+      }
+      .chat-inbox-input-row textarea {
+        flex: 1;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        padding: 8px 12px;
+        resize: none;
+        height: 50px;
+        font-family: inherit;
+        font-size: 0.9rem;
+      }
+      .chat-inbox-input-row textarea:focus { outline: none; border-color: var(--blue); }
     </style>
   </head>
   <body>
@@ -727,6 +891,14 @@
           style="display: none"
         >
           <span class="icon">🎮</span> Games &amp; Packages
+        </div>
+        <div
+          class="nav-item"
+          onclick="showPage('chat')"
+          id="nav-chat"
+          style="display: none"
+        >
+          <span class="icon">💬</span> Chats
         </div>
         <div class="sidebar-bottom">
           <button class="theme-toggle" onclick="toggleTheme()">
@@ -1168,6 +1340,36 @@
             </div>
             <div id="packages-list-wrap">
               <div class="empty-state">Chọn game để xem gói.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Chat Inbox page ── -->
+        <div class="page" id="page-chat">
+          <div class="page-title">💬 Chats</div>
+          <div class="chat-inbox-layout">
+            <div class="chat-inbox-list">
+              <div class="chat-inbox-list-header">
+                Cuộc trò chuyện
+                <button class="btn btn-sm btn-primary" onclick="loadChatPage()" style="font-size:0.75rem;padding:3px 9px">🔄</button>
+              </div>
+              <div id="inbox-conv-list" style="overflow-y:auto;flex:1">
+                <div class="empty-state" style="padding:30px">Loading...</div>
+              </div>
+            </div>
+            <div class="chat-inbox-view">
+              <div class="chat-inbox-view-header" id="inbox-view-header">
+                <span class="chat-status-dot" id="inbox-status-dot"></span>
+                <span id="inbox-order-title" style="color:var(--text2)">Chọn một cuộc trò chuyện</span>
+              </div>
+              <div id="inbox-messages" class="chat-inbox-messages">
+                <div class="chat-inbox-empty-state">← Chọn đơn hàng để xem chat</div>
+              </div>
+              <div class="chat-blocked-area" id="inbox-blocked-area"></div>
+              <div class="chat-inbox-input-row" id="inbox-input-row" style="display:none">
+                <textarea id="inbox-input" placeholder="Nhắn tin cho khách..." onkeydown="inboxKeydown(event)"></textarea>
+                <button class="btn btn-primary" onclick="sendInboxMsg()" style="align-self:flex-end;height:50px;padding:0 18px">Gửi</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1944,6 +2146,7 @@
             "flex";
           document.getElementById("nav-orders-search").style.display = "flex";
           document.getElementById("nav-games").style.display = "flex";
+          document.getElementById("nav-chat").style.display = "flex";
         } else {
           // staff only: My Orders & Withdraw
           document.getElementById("nav-my-orders").style.display = "flex";
@@ -1973,6 +2176,7 @@
         if (name === "withdraw") loadWithdrawPage();
         if (name === "withdrawals-admin") loadWithdrawals();
         if (name === "games") loadGames();
+        if (name === "chat") loadChatPage();
       }
 
       // ── Orders ─────────────────────────────────────────────────────────────────
@@ -3073,6 +3277,153 @@
       let _chatWs = null;
       let _chatOrderId = null;
 
+      // ── Chat Inbox Tab ───────────────────────────────────────────────────
+      let _inboxWs = null;
+      let _inboxOrderId = null;
+      let _inboxConvs = [];
+
+      async function loadChatPage() {
+        document.getElementById("inbox-conv-list").innerHTML =
+          '<div class="empty-state" style="padding:30px">Loading...</div>';
+        try {
+          _inboxConvs = (await api("GET", "/api/chats")) || [];
+          renderInboxList(_inboxConvs);
+          // Reopen current conversation if still in list
+          if (_inboxOrderId) {
+            const still = _inboxConvs.find(c => c.order_id === _inboxOrderId);
+            if (still) {
+              const el = document.getElementById("inbox-conv-" + _inboxOrderId);
+              if (el) el.classList.add("active");
+            }
+          }
+        } catch (e) {
+          document.getElementById("inbox-conv-list").innerHTML =
+            `<div class="empty-state" style="padding:30px">Lỗi: ${e.message}</div>`;
+        }
+      }
+
+      function renderInboxList(convs) {
+        const wrap = document.getElementById("inbox-conv-list");
+        if (!convs.length) {
+          wrap.innerHTML = '<div class="empty-state" style="padding:30px;text-align:center">Chưa có tin nhắn nào.</div>';
+          return;
+        }
+        wrap.innerHTML = convs.map(c => {
+          const o = c.order || {};
+          const preview = c.last_message ? escHtml(c.last_message.substring(0, 55)) : "—";
+          const time = c.last_at
+            ? new Date(c.last_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+            : "";
+          const icon = c.last_sender_type === "bot" ? "🤖" : c.last_sender_type === "staff" ? "👤" : "👥";
+          const statusBadge = o.status
+            ? `<span class="badge badge-${o.status}" style="font-size:0.65rem;padding:1px 5px">${o.status}</span>`
+            : "";
+          const active = _inboxOrderId === c.order_id ? " active" : "";
+          return `<div class="chat-conv-item${active}" id="inbox-conv-${c.order_id}" onclick="selectInboxConv(${c.order_id})">
+            <div class="chat-conv-order">#${c.order_id} ${statusBadge}</div>
+            <div class="chat-conv-preview">${icon} ${preview}</div>
+            <div class="chat-conv-time">${escHtml(o.game_id || "")} &middot; ${time}</div>
+          </div>`;
+        }).join("");
+      }
+
+      function selectInboxConv(orderId) {
+        _inboxOrderId = orderId;
+        document.querySelectorAll(".chat-conv-item").forEach(el => el.classList.remove("active"));
+        const el = document.getElementById("inbox-conv-" + orderId);
+        if (el) el.classList.add("active");
+
+        const conv = _inboxConvs.find(c => c.order_id === orderId);
+        const o = conv?.order || {};
+        document.getElementById("inbox-order-title").textContent =
+          `💬 Đơn #${orderId} — ${o.game_id || ""} ${o.package_name || ""}`;
+        document.getElementById("inbox-order-title").style.color = "var(--text)";
+        document.getElementById("inbox-messages").innerHTML =
+          '<div style="color:var(--text2);text-align:center;padding:30px">Đang tải...</div>';
+        document.getElementById("inbox-input-row").style.display = "";
+        document.getElementById("inbox-blocked-area").innerHTML = "";
+        connectInboxWs(orderId);
+      }
+
+      function connectInboxWs(orderId) {
+        if (_inboxWs) { _inboxWs.close(); _inboxWs = null; }
+        const tokenCookie = document.cookie.split(";").find(c => c.trim().startsWith("session_token="));
+        const token = tokenCookie ? tokenCookie.split("=")[1].trim() : "";
+        const proto = location.protocol === "https:" ? "wss:" : "ws:";
+        const ws = new WebSocket(`${proto}//${location.host}/ws/chat?order_id=${orderId}&token=${token}`);
+        _inboxWs = ws;
+        ws.onopen = () => setInboxDot(true);
+        ws.onclose = () => setInboxDot(false);
+        ws.onerror = () => setInboxDot(false);
+        ws.onmessage = (e) => {
+          const data = JSON.parse(e.data);
+          const wrap = document.getElementById("inbox-messages");
+          if (data.type === "history") {
+            wrap.innerHTML = "";
+            if (!data.messages.length)
+              wrap.innerHTML = '<div style="color:var(--text2);text-align:center;padding:30px;font-size:0.85rem">Chưa có tin nhắn nào.</div>';
+            else data.messages.forEach(m => appendInboxMsg(m));
+            wrap.scrollTop = wrap.scrollHeight;
+          } else if (data.type === "message") {
+            const empty = wrap.querySelector("[data-empty]");
+            if (empty) empty.remove();
+            appendInboxMsg(data);
+            wrap.scrollTop = 999999;
+            loadChatPage(); // refresh preview
+          } else if (data.type === "blocked") {
+            showInboxBlockedToast(data.reason);
+          }
+        };
+      }
+
+      function setInboxDot(connected) {
+        const dot = document.getElementById("inbox-status-dot");
+        if (!dot) return;
+        connected ? dot.classList.add("connected") : dot.classList.remove("connected");
+      }
+
+      function appendInboxMsg(msg) {
+        const wrap = document.getElementById("inbox-messages");
+        const div = document.createElement("div");
+        const t = msg.sender_type;
+        const cls = t === "staff" ? "staff" : t === "system" ? "system" : t === "bot" ? "bot" : "customer";
+        div.className = "chat-msg " + cls;
+        const time = msg.created_at
+          ? new Date(msg.created_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+          : "";
+        const name = msg.sender_name || msg.sender_id || "";
+        const label = t === "bot" ? "🤖 " + name : t === "staff" ? "👤 " + name : t === "system" ? "" : "👥 " + name;
+        if (t !== "system")
+          div.innerHTML = `<div class="chat-meta">${escHtml(label)} &middot; ${time}</div><div>${escHtml(msg.content)}</div>`;
+        else
+          div.innerHTML = `<div>${escHtml(msg.content)}</div>`;
+        wrap.appendChild(div);
+      }
+
+      function showInboxBlockedToast(reason) {
+        const area = document.getElementById("inbox-blocked-area");
+        const div = document.createElement("div");
+        div.className = "chat-blocked-toast";
+        div.textContent = reason;
+        area.innerHTML = "";
+        area.appendChild(div);
+        setTimeout(() => div.remove(), 5000);
+      }
+
+      function sendInboxMsg() {
+        if (!_inboxWs || _inboxWs.readyState !== WebSocket.OPEN) return;
+        const inp = document.getElementById("inbox-input");
+        const content = inp.value.trim();
+        if (!content) return;
+        _inboxWs.send(JSON.stringify({ type: "message", content }));
+        inp.value = "";
+        document.getElementById("inbox-blocked-area").innerHTML = "";
+      }
+
+      function inboxKeydown(e) {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendInboxMsg(); }
+      }
+
       function openChat(orderId) {
         _chatOrderId = orderId;
         document.getElementById("chat-order-title").textContent = "#" + orderId;
@@ -3087,18 +3438,28 @@
       function closeChat() {
         document.getElementById("chat-panel").classList.remove("open");
         document.getElementById("chat-overlay").classList.remove("open");
-        if (_chatWs) { _chatWs.close(); _chatWs = null; }
+        if (_chatWs) {
+          _chatWs.close();
+          _chatWs = null;
+        }
         _chatOrderId = null;
       }
 
       function connectChatWs(orderId) {
-        if (_chatWs) { _chatWs.close(); _chatWs = null; }
-        const tokenCookie = document.cookie.split(";").find(c => c.trim().startsWith("session_token="));
+        if (_chatWs) {
+          _chatWs.close();
+          _chatWs = null;
+        }
+        const tokenCookie = document.cookie
+          .split(";")
+          .find((c) => c.trim().startsWith("session_token="));
         const token = tokenCookie ? tokenCookie.split("=")[1].trim() : "";
         const proto = location.protocol === "https:" ? "wss:" : "ws:";
-        const ws = new WebSocket(`${proto}//${location.host}/ws/chat?order_id=${orderId}&token=${token}`);
+        const ws = new WebSocket(
+          `${proto}//${location.host}/ws/chat?order_id=${orderId}&token=${token}`,
+        );
         _chatWs = ws;
-        ws.onopen  = () => setDot(true);
+        ws.onopen = () => setDot(true);
         ws.onclose = () => setDot(false);
         ws.onerror = () => setDot(false);
         ws.onmessage = (e) => {
@@ -3107,7 +3468,8 @@
             const wrap = document.getElementById("chat-messages");
             wrap.innerHTML = "";
             if (!data.messages.length)
-              wrap.innerHTML = '<div style="color:var(--text2);text-align:center;padding:30px 0;font-size:0.85rem">Chưa có tin nhắn nào.</div>';
+              wrap.innerHTML =
+                '<div style="color:var(--text2);text-align:center;padding:30px 0;font-size:0.85rem">Chưa có tin nhắn nào.</div>';
             else data.messages.forEach(appendChatMsg);
             wrap.scrollTop = wrap.scrollHeight;
           } else if (data.type === "message") {
@@ -3124,24 +3486,42 @@
 
       function setDot(connected) {
         const dot = document.getElementById("chat-status-dot");
-        connected ? dot.classList.add("connected") : dot.classList.remove("connected");
+        connected
+          ? dot.classList.add("connected")
+          : dot.classList.remove("connected");
       }
 
       function appendChatMsg(msg) {
         const wrap = document.getElementById("chat-messages");
         const div = document.createElement("div");
         const t = msg.sender_type;
-        const cls = t === "staff" ? "staff" : t === "system" ? "system" : t === "bot" ? "bot" : "customer";
+        const cls =
+          t === "staff"
+            ? "staff"
+            : t === "system"
+              ? "system"
+              : t === "bot"
+                ? "bot"
+                : "customer";
         div.className = "chat-msg " + cls;
         const time = msg.created_at
-          ? new Date(msg.created_at).toLocaleTimeString("vi-VN", {hour:"2-digit",minute:"2-digit"})
+          ? new Date(msg.created_at).toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "";
         const name = msg.sender_name || msg.sender_id || "";
-        const label = t === "bot" ? "🤖 " + name : t === "staff" ? "👤 " + name : t === "system" ? "" : "👥 " + name;
+        const label =
+          t === "bot"
+            ? "🤖 " + name
+            : t === "staff"
+              ? "👤 " + name
+              : t === "system"
+                ? ""
+                : "👥 " + name;
         if (t !== "system")
           div.innerHTML = `<div class="chat-meta">${escHtml(label)} &middot; ${time}</div><div>${escHtml(msg.content)}</div>`;
-        else
-          div.innerHTML = `<div>${escHtml(msg.content)}</div>`;
+        else div.innerHTML = `<div>${escHtml(msg.content)}</div>`;
         wrap.appendChild(div);
       }
 
@@ -3166,13 +3546,18 @@
       }
 
       function chatKeydown(e) {
-        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChatMsg(); }
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendChatMsg();
+        }
       }
 
       function escHtml(str) {
         return String(str)
-          .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-          .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
     </script>
 
@@ -3182,14 +3567,33 @@
       <div class="chat-panel-header">
         <span class="chat-status-dot" id="chat-status-dot"></span>
         <h3>💬 Chat &mdash; Đơn <span id="chat-order-title">#</span></h3>
-        <button class="btn btn-sm" onclick="closeChat()"
-          style="background:var(--surface2);padding:4px 10px;font-size:0.8rem">✕ Đóng</button>
+        <button
+          class="btn btn-sm"
+          onclick="closeChat()"
+          style="
+            background: var(--surface2);
+            padding: 4px 10px;
+            font-size: 0.8rem;
+          "
+        >
+          ✕ Đóng
+        </button>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
       <div class="chat-blocked-area" id="chat-blocked-area"></div>
       <div class="chat-input-row">
-        <textarea id="chat-input" placeholder="Nhắn tin cho khách..." onkeydown="chatKeydown(event)"></textarea>
-        <button class="btn btn-primary" onclick="sendChatMsg()" style="align-self:flex-end;height:58px;padding:0 16px">Gửi</button>
+        <textarea
+          id="chat-input"
+          placeholder="Nhắn tin cho khách..."
+          onkeydown="chatKeydown(event)"
+        ></textarea>
+        <button
+          class="btn btn-primary"
+          onclick="sendChatMsg()"
+          style="align-self: flex-end; height: 58px; padding: 0 16px"
+        >
+          Gửi
+        </button>
       </div>
     </div>
   </body>

@@ -135,9 +135,10 @@ class WebhookServer:
         self.app.router.add_post("/api/games/{id}/packages",         self._api_packages_create)
         self.app.router.add_patch("/api/packages/{id}",              self._api_packages_update)
         self.app.router.add_delete("/api/packages/{id}",             self._api_packages_delete)
-        # Chat WebSocket + history
+        # Chat WebSocket + history + inbox
         self.app.router.add_get("/ws/chat",                          self._ws_chat)
         self.app.router.add_get("/api/orders/{id}/chat",             self._api_chat_history)
+        self.app.router.add_get("/api/chats",                        self._api_chats)
         self.app.router.add_get("/dashboard", self._dashboard_html)
         self.app.router.add_get("/dashboard/", self._dashboard_html)
 
@@ -1258,6 +1259,14 @@ class WebhookServer:
         order_id = int(request.match_info["id"])
         messages = await db.get_chat_history(order_id)
         return aiohttp.web.json_response(messages)
+
+    async def _api_chats(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        """GET /api/chats — Chat inbox: danh sách đơn hàng có tin nhắn (admin/staff)."""
+        sess, err = await _check_any(request)
+        if err:
+            return err
+        inbox = await db.get_chat_inbox()
+        return aiohttp.web.json_response(inbox)
 
     async def _broadcast_chat(self, order_id: int, message: dict) -> None:
         """Gửi message tới tất cả WS client đang xem order đó."""
