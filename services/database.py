@@ -38,7 +38,9 @@ async def _get(table: str, params: dict) -> list:
 
 async def _post(table: str, data: dict) -> dict:
     async with _sess().post(f"{_REST}/{table}", json=data) as r:
-        r.raise_for_status()
+        if not r.ok:
+            body = await r.text()
+            raise RuntimeError(f"Supabase {r.status}: {body}")
         rows = await r.json()
         return rows[0] if isinstance(rows, list) else rows
 

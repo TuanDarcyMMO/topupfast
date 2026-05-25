@@ -1117,7 +1117,8 @@ class WebhookServer:
                 platform=body.get("platform") or "all",
             )
         except Exception as e:
-            raise aiohttp.web.HTTPConflict(reason=str(e))
+            logger.error("create_package error: %s", e)
+            return aiohttp.web.json_response({"error": str(e)}, status=400)
         return aiohttp.web.json_response(pkg, status=201)
 
     async def _api_packages_update(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
