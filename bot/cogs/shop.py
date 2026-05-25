@@ -1,4 +1,4 @@
-﻿"""
+"""
 Shop cog - mua game package tu balance.
 3-tier flow: /buy -> game -> category -> package -> account -> confirm -> order
 """

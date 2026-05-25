@@ -46,3 +46,9 @@ EXCHANGE_RATE: float = float(os.getenv("EXCHANGE_RATE", 26000))   # VND per 1 US
 MIN_DEPOSIT_VND: int = int(os.getenv("MIN_DEPOSIT_VND", 10000))
 MIN_DEPOSIT_USD: float = float(os.getenv("MIN_DEPOSIT_USD", 1.0))
 PAYMENT_EXPIRY_MINUTES: int = int(os.getenv("PAYMENT_EXPIRY_MINUTES", 30))
+
+# ---- OpenAI (AI chatbot tự động trả lời khách trong ticket) ----
+# Lấy key tại: https://platform.openai.com/api-keys
+# Để trống = tắt tính năng AI bot
+OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")

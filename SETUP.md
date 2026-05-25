@@ -7,16 +7,19 @@
 ## Lần đầu cài đặt
 
 ### Bước 1: Switch sang root
+
 ```bash
 sudo su -
 ```
 
 ### Bước 2: Cài git + clone repo (thay `<TOKEN>` bằng GitHub PAT của bạn)
+
 ```bash
 apt-get update && apt-get install -y git && git clone https://TuanDarcy:<TOKEN>@github.com/TuanDarcy/topupfast.git /opt/topupfast
 ```
 
 ### Bước 3: Tạo file .env
+
 ```bash
 cat > /opt/topupfast/.env << 'EOF'
 DISCORD_TOKEN=
@@ -43,14 +46,17 @@ MIN_DEPOSIT_USD=1.0
 PAYMENT_EXPIRY_MINUTES=30
 EOF
 ```
+
 > Sau đó edit điền token thật: `nano /opt/topupfast/.env`
 
 ### Bước 4: Chạy setup (cài Python, tạo venv, tạo systemd service, start bot)
+
 ```bash
 cd /opt/topupfast && bash setup.sh
 ```
 
 ### Bước 5: Kiểm tra bot chạy
+
 ```bash
 systemctl status topupfast
 ```
@@ -67,13 +73,13 @@ cd /opt/topupfast && git pull origin main && systemctl restart topupfast && syst
 
 ## Các lệnh hữu ích
 
-| Lệnh | Mô tả |
-|------|-------|
-| `systemctl status topupfast` | Xem trạng thái bot |
-| `systemctl restart topupfast` | Restart bot |
-| `systemctl stop topupfast` | Dừng bot |
-| `systemctl start topupfast` | Start bot |
-| `journalctl -u topupfast -f` | Xem log realtime |
+| Lệnh                             | Mô tả                     |
+| -------------------------------- | ------------------------- |
+| `systemctl status topupfast`     | Xem trạng thái bot        |
+| `systemctl restart topupfast`    | Restart bot               |
+| `systemctl stop topupfast`       | Dừng bot                  |
+| `systemctl start topupfast`      | Start bot                 |
+| `journalctl -u topupfast -f`     | Xem log realtime          |
 | `journalctl -u topupfast -n 100` | Xem 100 dòng log gần nhất |
 
 ---

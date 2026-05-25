@@ -2006,6 +2006,7 @@
             `<button class="btn btn-primary btn-sm" onclick="claimOrder(${o.id})">🙋 Claim</button>`,
             rejectBtn,
             directRefundBtn,
+            `<button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`,
           ]
             .filter(Boolean)
             .join("<br>");
@@ -2020,6 +2021,7 @@
               `<button class="btn btn-success btn-sm" onclick="openComplete(${o.id})">✅ Complete</button>`,
               rejectBtn,
               directRefundBtn,
+              `<button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`,
             ]
               .filter(Boolean)
               .join("<br>")
@@ -2033,12 +2035,14 @@
             return (
               staffInfo +
               `<button class="btn btn-success btn-sm" onclick="approveRefund(${o.id})">✅ Approve</button><br>` +
-              `<button class="btn btn-danger btn-sm" onclick="openDenyRefund(${o.id})" style="margin-top:4px">❌ Deny</button>`
+              `<button class="btn btn-danger btn-sm" onclick="openDenyRefund(${o.id})" style="margin-top:4px">❌ Deny</button>` +
+              `<br><button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`
             );
           }
           return (
             staffInfo +
-            `<small style="color:var(--text2)">⏳ Đợi admin duyệt</small>`
+            `<small style="color:var(--text2)">⏳ Đợi admin duyệt</small>` +
+            `<br><button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`
           );
         }
         if (o.status === "completed") {

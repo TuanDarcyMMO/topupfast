@@ -12,3 +12,7 @@ dist/
 # Thư mục ảnh sản phẩm (không cần lên git)
 "Các Game nạp được/"
 Các*/
+# Schema DB (chứa seed data, không đưa lên public repo)
+schema.sql
+# Docs nội bộ
+docs.md

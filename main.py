@@ -32,6 +32,8 @@ async def main() -> None:
 
     bot = TopUpBot()
     webhook_server = WebhookServer(bot)
+    # Store reference on bot so AdminCog can relay Discord messages to WS clients
+    bot._webhook_server = webhook_server
 
     try:
         await asyncio.gather(

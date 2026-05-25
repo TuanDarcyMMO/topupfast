@@ -550,3 +550,46 @@ async def reject_withdrawal(req_id: int, admin_discord_id: str, note: str = "") 
         "completed_at": datetime.utcnow().isoformat(),
         "admin_note": note or None,
     })
+
+
+# ============================================================ Chat messages ==
+
+async def save_chat_message(
+    order_id: int,
+    sender_type: str,
+    sender_id: str,
+    sender_name: str,
+    content: str,
+    blocked: bool = False,
+    block_reason: str = "",
+) -> dict:
+    """Lưu tin nhắn vào bảng chat_messages."""
+    return await _post("chat_messages", {
+        "order_id": order_id,
+        "sender_type": sender_type,
+        "sender_id": sender_id,
+        "sender_name": sender_name,
+        "content": content,
+        "blocked": blocked,
+        "block_reason": block_reason or None,
+    })
+
+
+async def get_chat_history(order_id: int, limit: int = 100) -> list:
+    """Lấy lịch sử chat (chỉ tin chưa bị block) của 1 đơn hàng."""
+    return await _get("chat_messages", {
+        "order_id": f"eq.{order_id}",
+        "blocked": "eq.false",
+        "order": "created_at.asc",
+        "limit": str(limit),
+    })
+
+
+async def get_order_by_ticket_channel(channel_id: str) -> dict | None:
+    """Tìm đơn hàng theo ticket_channel_id Discord."""
+    rows = await _get("orders", {
+        "ticket_channel_id": f"eq.{channel_id}",
+        "order": "created_at.desc",
+        "limit": "1",
+    })
+    return rows[0] if rows else None

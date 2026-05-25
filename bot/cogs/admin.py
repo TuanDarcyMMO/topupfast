@@ -360,7 +360,89 @@ class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    # ─── /setup-shop ─────────────────────────────────────────────────────────
+    # ─── Ticket message relay → WebSocket dashboard ───────────────────────────
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """
+        Lắng nghe tin nhắn trong ticket channel (category "📋 Đơn Nạp").
+        Nếu người gửi là khách (không phải bot), relay sang WebSocket dashboard.
+        """
+        # Bỏ qua tin của bot
+        if message.author.bot:
+            return
+        # Chỉ xử lý trong guild
+        if not message.guild:
+            return
+        # Kiểm tra channel có thuộc ticket category không
+        if not message.channel.category:
+            return
+        if message.channel.category.name != _TICKET_CATEGORY:
+            return
+        # Bỏ qua nếu không có nội dung văn bản
+        content = message.content.strip()
+        if not content:
+            return
+
+        # Tìm đơn hàng gắn với ticket channel này
+        try:
+            import services.database as _db
+            from services.ai_bot import get_ai_reply
+
+            order = await _db.get_order_by_ticket_channel(str(message.channel.id))
+            if not order:
+                return
+
+            # Relay sang WebhookServer nếu đã được gắn trên bot
+            webhook_server = getattr(self.bot, "_webhook_server", None)
+            if webhook_server is None:
+                return
+
+            await webhook_server.broadcast_discord_message(
+                order_id=order["id"],
+                discord_id=str(message.author.id),
+                display_name=message.author.display_name,
+                content=content,
+            )
+
+            # ── Gọi AI tự động trả lời ──────────────────────────────────────
+            history = await _db.get_chat_history(order["id"], limit=20)
+            ai_reply = await get_ai_reply(
+                customer_message=content,
+                order_context=order,
+                history=history,
+            )
+            if ai_reply:
+                # Gửi vào ticket Discord dưới dạng embed
+                embed = discord.Embed(
+                    description=ai_reply,
+                    color=discord.Color.blurple(),
+                )
+                embed.set_author(name="🤖 TopUpFast Bot")
+                await message.channel.send(embed=embed)
+
+                # Lưu vào DB và broadcast sang WebSocket dashboard
+                await _db.save_chat_message(
+                    order_id=order["id"],
+                    sender_type="bot",
+                    sender_id="ai_bot",
+                    sender_name="TopUpFast Bot",
+                    content=ai_reply,
+                )
+                if webhook_server:
+                    import time as _time
+                    await webhook_server._broadcast_chat(order["id"], {
+                        "type": "message",
+                        "id": None,
+                        "order_id": order["id"],
+                        "sender_type": "bot",
+                        "sender_id": "ai_bot",
+                        "sender_name": "TopUpFast Bot",
+                        "content": ai_reply,
+                        "created_at": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+                    })
+        except Exception:
+            logger.exception("on_message relay lỗi")
 
     @app_commands.command(
         name="setup-shop",

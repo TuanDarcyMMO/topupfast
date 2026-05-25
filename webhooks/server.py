@@ -39,6 +39,7 @@ import services.database as db
 from config import EXCHANGE_RATE, WEBHOOK_HOST, WEBHOOK_PORT
 from services.nowpayments import verify_ipn as np_verify_ipn, NP_STATUS_MAP, round2 as np_round2
 from services.sepay import validate_webhook as sepay_validate, extract_tfa_code
+from services.chat_guard import check_staff_message
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,9 @@ class WebhookServer:
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.app = aiohttp.web.Application()
+        # order_id → set of active WebSocket connections from dashboard
+        self._chat_connections: dict[int, set[aiohttp.web.WebSocketResponse]] = {}
+
         self.app.router.add_get("/health", self._health)
         self.app.router.add_post("/webhook/sepay", self._sepay)
         self.app.router.add_post("/webhook/nowpayments", self._nowpayments)
@@ -131,6 +135,9 @@ class WebhookServer:
         self.app.router.add_post("/api/games/{id}/packages",         self._api_packages_create)
         self.app.router.add_patch("/api/packages/{id}",              self._api_packages_update)
         self.app.router.add_delete("/api/packages/{id}",             self._api_packages_delete)
+        # Chat WebSocket + history
+        self.app.router.add_get("/ws/chat",                          self._ws_chat)
+        self.app.router.add_get("/api/orders/{id}/chat",             self._api_chat_history)
         self.app.router.add_get("/dashboard", self._dashboard_html)
         self.app.router.add_get("/dashboard/", self._dashboard_html)
 
@@ -1124,7 +1131,175 @@ class WebhookServer:
         await db.delete_package(pkg_id)
         return aiohttp.web.json_response({"ok": True})
 
-    async def start(self) -> None:
+    # ──────────────────────────────────────────────── Chat / WebSocket ───────
+
+    async def _ws_chat(self, request: aiohttp.web.Request) -> aiohttp.web.WebSocketResponse:
+        """
+        WebSocket endpoint: GET /ws/chat?order_id=<id>&token=<session_token>
+
+        Protocol (JSON frames):
+          Client → Server:
+            {"type": "message", "content": "..."}   — nhân viên gửi tin nhắn đến khách
+
+          Server → Client:
+            {"type": "history", "messages": [...]}  — lịch sử chat khi mở kết nối
+            {"type": "message", ...msgObj}           — tin mới (customer hoặc staff)
+            {"type": "blocked", "reason": "..."}     — tin bị chặn (chỉ gửi lại cho sender)
+            {"type": "system", "content": "..."}     — thông báo hệ thống
+        """
+        # ── Authenticate ──────────────────────────────────────────────────────
+        token = request.rel_url.query.get("token", "") or request.cookies.get("session_token", "")
+        sess = _SESSIONS.get(token)
+        if not sess or sess["expires"] <= time.time():
+            raise aiohttp.web.HTTPUnauthorized(reason="Invalid or expired session")
+
+        order_id_str = request.rel_url.query.get("order_id", "")
+        if not order_id_str.isdigit():
+            raise aiohttp.web.HTTPBadRequest(reason="order_id required")
+        order_id = int(order_id_str)
+
+        # Verify order exists
+        order = await db.get_order(order_id)
+        if not order:
+            raise aiohttp.web.HTTPNotFound(reason="Order not found")
+
+        ws = aiohttp.web.WebSocketResponse(heartbeat=30)
+        await ws.prepare(request)
+
+        # Register connection
+        self._chat_connections.setdefault(order_id, set()).add(ws)
+        logger.info(f"Chat WS connected: staff={sess['username']} order={order_id}")
+
+        try:
+            # Send chat history on connect
+            history = await db.get_chat_history(order_id)
+            await ws.send_json({"type": "history", "messages": history})
+
+            async for msg in ws:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    try:
+                        data = json.loads(msg.data)
+                    except Exception:
+                        continue
+
+                    if data.get("type") != "message":
+                        continue
+
+                    content = str(data.get("content", "")).strip()
+                    if not content or len(content) > 2000:
+                        continue
+
+                    # ── Guard check ───────────────────────────────────────────
+                    is_violation, reason = check_staff_message(content)
+                    if is_violation:
+                        # Log blocked attempt
+                        await db.save_chat_message(
+                            order_id=order_id,
+                            sender_type="staff",
+                            sender_id=sess["discord_id"],
+                            sender_name=sess["username"],
+                            content=content,
+                            blocked=True,
+                            block_reason=reason,
+                        )
+                        logger.warning(
+                            f"Chat blocked: staff={sess['username']} order={order_id} "
+                            f"reason={reason!r} content={content!r}"
+                        )
+                        await ws.send_json({"type": "blocked", "reason": reason})
+                        continue
+
+                    # ── Save to DB ────────────────────────────────────────────
+                    saved = await db.save_chat_message(
+                        order_id=order_id,
+                        sender_type="staff",
+                        sender_id=sess["discord_id"],
+                        sender_name=sess["username"],
+                        content=content,
+                    )
+
+                    # ── Broadcast to all dashboard clients for this order ─────
+                    await self._broadcast_chat(order_id, saved)
+
+                    # ── Send to Discord ticket channel ────────────────────────
+                    asyncio.create_task(
+                        self._send_to_discord_ticket(order, sess["username"], content)
+                    )
+
+                elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE):
+                    break
+        finally:
+            conns = self._chat_connections.get(order_id)
+            if conns:
+                conns.discard(ws)
+                if not conns:
+                    del self._chat_connections[order_id]
+            logger.info(f"Chat WS disconnected: staff={sess['username']} order={order_id}")
+
+        return ws
+
+    async def _api_chat_history(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        """GET /api/orders/{id}/chat — REST fallback to load chat history."""
+        sess, err = await _check_any(request)
+        if err:
+            return err
+        order_id = int(request.match_info["id"])
+        messages = await db.get_chat_history(order_id)
+        return aiohttp.web.json_response(messages)
+
+    async def _broadcast_chat(self, order_id: int, message: dict) -> None:
+        """Gửi message tới tất cả WS client đang xem order đó."""
+        conns = self._chat_connections.get(order_id)
+        if not conns:
+            return
+        payload = json.dumps({"type": "message", **message})
+        dead: set[aiohttp.web.WebSocketResponse] = set()
+        for ws in list(conns):
+            try:
+                await ws.send_str(payload)
+            except Exception:
+                dead.add(ws)
+        conns -= dead
+
+    async def _send_to_discord_ticket(self, order: dict, staff_name: str, content: str) -> None:
+        """Bot gửi reply của nhân viên vào Discord ticket channel."""
+        try:
+            ch_id = order.get("ticket_channel_id")
+            if not ch_id:
+                return
+            channel = self.bot.get_channel(int(ch_id))
+            if channel is None:
+                return
+            embed = discord.Embed(
+                description=content,
+                color=discord.Color.blurple(),
+            )
+            embed.set_author(name=f"💬 Staff: {staff_name}")
+            await channel.send(embed=embed)
+        except Exception:
+            logger.exception("Could not send staff message to Discord ticket")
+
+    async def broadcast_discord_message(
+        self,
+        order_id: int,
+        discord_id: str,
+        display_name: str,
+        content: str,
+    ) -> None:
+        """
+        Được gọi bởi AdminCog khi khách gửi tin nhắn trong ticket Discord.
+        Lưu vào DB và broadcast tới tất cả dashboard WS client.
+        """
+        saved = await db.save_chat_message(
+            order_id=order_id,
+            sender_type="customer",
+            sender_id=discord_id,
+            sender_name=display_name,
+            content=content,
+        )
+        await self._broadcast_chat(order_id, saved)
+
+    # -------------------------------------------------------------- start --
         # Custom access log format: hide User-Agent, only show method/path/status/size
         access_log_format = '%a [%t] "%r" %s %b'
 
