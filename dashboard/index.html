@@ -723,13 +723,37 @@
         border-bottom: 1px solid var(--border);
         transition: background 0.15s;
       }
-      .chat-conv-item:hover { background: var(--surface2); }
-      .chat-conv-item.active { background: var(--blue); color: #fff; }
+      .chat-conv-item:hover {
+        background: var(--surface2);
+      }
+      .chat-conv-item.active {
+        background: var(--blue);
+        color: #fff;
+      }
       .chat-conv-item.active .chat-conv-time,
-      .chat-conv-item.active .chat-conv-preview { color: rgba(255,255,255,0.75); }
-      .chat-conv-order { font-weight: 600; font-size: 0.83rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-      .chat-conv-preview { font-size: 0.77rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-      .chat-conv-time { font-size: 0.72rem; color: var(--text2); }
+      .chat-conv-item.active .chat-conv-preview {
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .chat-conv-order {
+        font-weight: 600;
+        font-size: 0.83rem;
+        margin-bottom: 3px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chat-conv-preview {
+        font-size: 0.77rem;
+        color: var(--text2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+      }
+      .chat-conv-time {
+        font-size: 0.72rem;
+        color: var(--text2);
+      }
       .chat-inbox-view {
         flex: 1;
         display: flex;
@@ -784,7 +808,10 @@
         font-family: inherit;
         font-size: 0.9rem;
       }
-      .chat-inbox-input-row textarea:focus { outline: none; border-color: var(--blue); }
+      .chat-inbox-input-row textarea:focus {
+        outline: none;
+        border-color: var(--blue);
+      }
     </style>
   </head>
   <body>
@@ -1351,24 +1378,48 @@
             <div class="chat-inbox-list">
               <div class="chat-inbox-list-header">
                 Cuộc trò chuyện
-                <button class="btn btn-sm btn-primary" onclick="loadChatPage()" style="font-size:0.75rem;padding:3px 9px">🔄</button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  onclick="loadChatPage()"
+                  style="font-size: 0.75rem; padding: 3px 9px"
+                >
+                  🔄
+                </button>
               </div>
-              <div id="inbox-conv-list" style="overflow-y:auto;flex:1">
-                <div class="empty-state" style="padding:30px">Loading...</div>
+              <div id="inbox-conv-list" style="overflow-y: auto; flex: 1">
+                <div class="empty-state" style="padding: 30px">Loading...</div>
               </div>
             </div>
             <div class="chat-inbox-view">
               <div class="chat-inbox-view-header" id="inbox-view-header">
                 <span class="chat-status-dot" id="inbox-status-dot"></span>
-                <span id="inbox-order-title" style="color:var(--text2)">Chọn một cuộc trò chuyện</span>
+                <span id="inbox-order-title" style="color: var(--text2)"
+                  >Chọn một cuộc trò chuyện</span
+                >
               </div>
               <div id="inbox-messages" class="chat-inbox-messages">
-                <div class="chat-inbox-empty-state">← Chọn đơn hàng để xem chat</div>
+                <div class="chat-inbox-empty-state">
+                  ← Chọn đơn hàng để xem chat
+                </div>
               </div>
               <div class="chat-blocked-area" id="inbox-blocked-area"></div>
-              <div class="chat-inbox-input-row" id="inbox-input-row" style="display:none">
-                <textarea id="inbox-input" placeholder="Nhắn tin cho khách..." onkeydown="inboxKeydown(event)"></textarea>
-                <button class="btn btn-primary" onclick="sendInboxMsg()" style="align-self:flex-end;height:50px;padding:0 18px">Gửi</button>
+              <div
+                class="chat-inbox-input-row"
+                id="inbox-input-row"
+                style="display: none"
+              >
+                <textarea
+                  id="inbox-input"
+                  placeholder="Nhắn tin cho khách..."
+                  onkeydown="inboxKeydown(event)"
+                ></textarea>
+                <button
+                  class="btn btn-primary"
+                  onclick="sendInboxMsg()"
+                  style="align-self: flex-end; height: 50px; padding: 0 18px"
+                >
+                  Gửi
+                </button>
               </div>
             </div>
           </div>
@@ -2176,7 +2227,8 @@
         if (name === "withdraw") loadWithdrawPage();
         if (name === "withdrawals-admin") loadWithdrawals();
         if (name === "games") loadGames();
-        if (name === "chat") loadChatPage();
+        if (name === "chat") { loadChatPage(); _startInboxPoll(); }
+        else _stopInboxPoll();
       }
 
       // ── Orders ─────────────────────────────────────────────────────────────────
@@ -3281,6 +3333,24 @@
       let _inboxWs = null;
       let _inboxOrderId = null;
       let _inboxConvs = [];
+      let _inboxPollTimer = null;
+
+      function _startInboxPoll() {
+        _stopInboxPoll();
+        _inboxPollTimer = setInterval(async () => {
+          if (document.getElementById("page-chat")?.classList.contains("active")) {
+            try {
+              const fresh = (await api("GET", "/api/chats")) || [];
+              const hasNew = JSON.stringify(fresh.map(c => c.last_at + c.order_id))
+                          !== JSON.stringify(_inboxConvs.map(c => c.last_at + c.order_id));
+              if (hasNew) { _inboxConvs = fresh; renderInboxList(fresh); }
+            } catch (_) {}
+          }
+        }, 15000);
+      }
+      function _stopInboxPoll() {
+        if (_inboxPollTimer) { clearInterval(_inboxPollTimer); _inboxPollTimer = null; }
+      }
 
       async function loadChatPage() {
         document.getElementById("inbox-conv-list").innerHTML =
@@ -3290,7 +3360,7 @@
           renderInboxList(_inboxConvs);
           // Reopen current conversation if still in list
           if (_inboxOrderId) {
-            const still = _inboxConvs.find(c => c.order_id === _inboxOrderId);
+            const still = _inboxConvs.find((c) => c.order_id === _inboxOrderId);
             if (still) {
               const el = document.getElementById("inbox-conv-" + _inboxOrderId);
               if (el) el.classList.add("active");
@@ -3305,39 +3375,55 @@
       function renderInboxList(convs) {
         const wrap = document.getElementById("inbox-conv-list");
         if (!convs.length) {
-          wrap.innerHTML = '<div class="empty-state" style="padding:30px;text-align:center">Chưa có tin nhắn nào.</div>';
+          wrap.innerHTML =
+            '<div class="empty-state" style="padding:30px;text-align:center">Chưa có tin nhắn nào.</div>';
           return;
         }
-        wrap.innerHTML = convs.map(c => {
-          const o = c.order || {};
-          const preview = c.last_message ? escHtml(c.last_message.substring(0, 55)) : "—";
-          const time = c.last_at
-            ? new Date(c.last_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-            : "";
-          const icon = c.last_sender_type === "bot" ? "🤖" : c.last_sender_type === "staff" ? "👤" : "👥";
-          const statusBadge = o.status
-            ? `<span class="badge badge-${o.status}" style="font-size:0.65rem;padding:1px 5px">${o.status}</span>`
-            : "";
-          const active = _inboxOrderId === c.order_id ? " active" : "";
-          return `<div class="chat-conv-item${active}" id="inbox-conv-${c.order_id}" onclick="selectInboxConv(${c.order_id})">
+        wrap.innerHTML = convs
+          .map((c) => {
+            const o = c.order || {};
+            const preview = c.last_message
+              ? escHtml(c.last_message.substring(0, 55))
+              : "—";
+            const time = c.last_at
+              ? new Date(c.last_at).toLocaleTimeString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "";
+            const icon =
+              c.last_sender_type === "bot"
+                ? "🤖"
+                : c.last_sender_type === "staff"
+                  ? "👤"
+                  : "👥";
+            const statusBadge = o.status
+              ? `<span class="badge badge-${o.status}" style="font-size:0.65rem;padding:1px 5px">${o.status}</span>`
+              : "";
+            const active = _inboxOrderId === c.order_id ? " active" : "";
+            return `<div class="chat-conv-item${active}" id="inbox-conv-${c.order_id}" onclick="selectInboxConv(${c.order_id})">
             <div class="chat-conv-order">#${c.order_id} ${statusBadge}</div>
             <div class="chat-conv-preview">${icon} ${preview}</div>
             <div class="chat-conv-time">${escHtml(o.game_id || "")} &middot; ${time}</div>
           </div>`;
-        }).join("");
+          })
+          .join("");
       }
 
       function selectInboxConv(orderId) {
         _inboxOrderId = orderId;
-        document.querySelectorAll(".chat-conv-item").forEach(el => el.classList.remove("active"));
+        document
+          .querySelectorAll(".chat-conv-item")
+          .forEach((el) => el.classList.remove("active"));
         const el = document.getElementById("inbox-conv-" + orderId);
         if (el) el.classList.add("active");
 
-        const conv = _inboxConvs.find(c => c.order_id === orderId);
+        const conv = _inboxConvs.find((c) => c.order_id === orderId);
         const o = conv?.order || {};
         document.getElementById("inbox-order-title").textContent =
           `💬 Đơn #${orderId} — ${o.game_id || ""} ${o.package_name || ""}`;
-        document.getElementById("inbox-order-title").style.color = "var(--text)";
+        document.getElementById("inbox-order-title").style.color =
+          "var(--text)";
         document.getElementById("inbox-messages").innerHTML =
           '<div style="color:var(--text2);text-align:center;padding:30px">Đang tải...</div>';
         document.getElementById("inbox-input-row").style.display = "";
@@ -3346,11 +3432,18 @@
       }
 
       function connectInboxWs(orderId) {
-        if (_inboxWs) { _inboxWs.close(); _inboxWs = null; }
-        const tokenCookie = document.cookie.split(";").find(c => c.trim().startsWith("session_token="));
+        if (_inboxWs) {
+          _inboxWs.close();
+          _inboxWs = null;
+        }
+        const tokenCookie = document.cookie
+          .split(";")
+          .find((c) => c.trim().startsWith("session_token="));
         const token = tokenCookie ? tokenCookie.split("=")[1].trim() : "";
         const proto = location.protocol === "https:" ? "wss:" : "ws:";
-        const ws = new WebSocket(`${proto}//${location.host}/ws/chat?order_id=${orderId}&token=${token}`);
+        const ws = new WebSocket(
+          `${proto}//${location.host}/ws/chat?order_id=${orderId}&token=${token}`,
+        );
         _inboxWs = ws;
         ws.onopen = () => setInboxDot(true);
         ws.onclose = () => setInboxDot(false);
@@ -3361,8 +3454,9 @@
           if (data.type === "history") {
             wrap.innerHTML = "";
             if (!data.messages.length)
-              wrap.innerHTML = '<div style="color:var(--text2);text-align:center;padding:30px;font-size:0.85rem">Chưa có tin nhắn nào.</div>';
-            else data.messages.forEach(m => appendInboxMsg(m));
+              wrap.innerHTML =
+                '<div style="color:var(--text2);text-align:center;padding:30px;font-size:0.85rem">Chưa có tin nhắn nào.</div>';
+            else data.messages.forEach((m) => appendInboxMsg(m));
             wrap.scrollTop = wrap.scrollHeight;
           } else if (data.type === "message") {
             const empty = wrap.querySelector("[data-empty]");
@@ -3379,24 +3473,42 @@
       function setInboxDot(connected) {
         const dot = document.getElementById("inbox-status-dot");
         if (!dot) return;
-        connected ? dot.classList.add("connected") : dot.classList.remove("connected");
+        connected
+          ? dot.classList.add("connected")
+          : dot.classList.remove("connected");
       }
 
       function appendInboxMsg(msg) {
         const wrap = document.getElementById("inbox-messages");
         const div = document.createElement("div");
         const t = msg.sender_type;
-        const cls = t === "staff" ? "staff" : t === "system" ? "system" : t === "bot" ? "bot" : "customer";
+        const cls =
+          t === "staff"
+            ? "staff"
+            : t === "system"
+              ? "system"
+              : t === "bot"
+                ? "bot"
+                : "customer";
         div.className = "chat-msg " + cls;
         const time = msg.created_at
-          ? new Date(msg.created_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+          ? new Date(msg.created_at).toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "";
         const name = msg.sender_name || msg.sender_id || "";
-        const label = t === "bot" ? "🤖 " + name : t === "staff" ? "👤 " + name : t === "system" ? "" : "👥 " + name;
+        const label =
+          t === "bot"
+            ? "🤖 " + name
+            : t === "staff"
+              ? "👤 " + name
+              : t === "system"
+                ? ""
+                : "👥 " + name;
         if (t !== "system")
           div.innerHTML = `<div class="chat-meta">${escHtml(label)} &middot; ${time}</div><div>${escHtml(msg.content)}</div>`;
-        else
-          div.innerHTML = `<div>${escHtml(msg.content)}</div>`;
+        else div.innerHTML = `<div>${escHtml(msg.content)}</div>`;
         wrap.appendChild(div);
       }
 
@@ -3421,7 +3533,10 @@
       }
 
       function inboxKeydown(e) {
-        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendInboxMsg(); }
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendInboxMsg();
+        }
       }
 
       function openChat(orderId) {

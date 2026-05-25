@@ -43,6 +43,17 @@ CÂU HỎI THƯỜNG GẶP:
 - "sao chưa nhận được?" → Kiểm tra trạng thái đơn, nếu "delivering" là đang xử lý
 - "hủy đơn được không?" → Liên hệ nhân viên để được hỗ trợ
 - "nạp sai nick?" → Nhân viên sẽ xem xét và hỗ trợ
+
+QUY TRÌNH CHUYỂN TIẾP THÔNG TIN TÀI KHOẢN (credential relay):
+Khi khách hoặc nhân viên nhắn YÊU CẦU THÔNG TIN TÀI KHOẢN để xử lý đơn:
+(ví dụ: "xử lý đơn cho tôi", "gửi thông tin tài khoản", "cần tk để nạp", "send account info", "process my order", "give me credentials")
+→ Nếu đơn hàng có thông tin tài khoản (xem THÔNG TIN TÀI KHOẢN ĐƠN bên dưới):
+   Trả lời NGẮN GỌN theo format:
+   "Thông tin tài khoản đơn #{order_id}:
+   📧 Tài khoản: [account]
+   🔑 Mật khẩu: [password]"
+→ Nếu chưa có thông tin → nhắc nhân viên kiểm tra lại đơn.
+→ KHÔNG thêm bất kỳ thông tin nào khác trong trường hợp này.
 """
 
 _client = None  # lazy init
@@ -91,6 +102,20 @@ async def get_ai_reply(
 
     # Thêm context đơn hàng vào system prompt nếu có
     if order_context:
+        note = order_context.get("game_account_note", "") or ""
+        # Parse platform/password from structured note
+        platform_label = ""
+        password = ""
+        if note.startswith("PLATFORM:"):
+            lines = note.split("\n")
+            platform_raw = lines[0].replace("PLATFORM:", "").strip()
+            platform_label = {"ios": "iOS (iCloud)", "android": "Android (Google Play)"}.get(
+                platform_raw.lower(), platform_raw
+            )
+            for ln in lines[1:]:
+                if ln.startswith("PASSWORD:"):
+                    password = ln.replace("PASSWORD:", "").strip()
+
         system_content += (
             f"\n\nĐƠN HÀNG HIỆN TẠI:\n"
             f"- Order ID: #{order_context.get('id', 'N/A')}\n"
@@ -98,8 +123,17 @@ async def get_ai_reply(
             f"- Gói nạp: {order_context.get('package_name', 'N/A')}\n"
             f"- Giá: ${order_context.get('price_usd', 0):.2f} USD\n"
             f"- Trạng thái: {order_context.get('status', 'N/A')}\n"
-            f"- Tài khoản game: {order_context.get('game_account') or 'chưa cung cấp'}\n"
         )
+        if platform_label:
+            system_content += f"- Platform: {platform_label}\n"
+
+        account = order_context.get("game_account") or ""
+        if account:
+            system_content += f"\nTHÔNG TIN TÀI KHOẢN ĐƠN:\n- Tài khoản: {account}\n"
+            if password:
+                system_content += f"- Mật khẩu: {password}\n"
+        else:
+            system_content += "\nTHÔNG TIN TÀI KHOẢN ĐƠN: chưa có thông tin tài khoản.\n"
 
     messages: list[dict] = [{"role": "system", "content": system_content}]
 

@@ -43,6 +43,28 @@ from services.chat_guard import check_staff_message
 
 logger = logging.getLogger(__name__)
 
+# ── Anonymous name generator (consistent per discord_id) ─────────────────────
+_ANON_ADJ = ["Calm", "Brave", "Swift", "Wise", "Bold", "Bright", "Silent", "Quick",
+             "Cool", "Kind", "Lucky", "Sharp", "Sleek", "Sunny", "Wild"]
+_ANON_NOUN = ["Fox", "Bear", "Eagle", "Wolf", "Tiger", "Panda", "Hawk",
+              "Lion", "Deer", "Otter", "Raven", "Lynx", "Bison", "Crane"]
+
+def _anon_name(discord_id: str) -> str:
+    """Deterministic anonymous name from discord_id (same id → same name)."""
+    h = int(hashlib.md5(discord_id.encode()).hexdigest()[:8], 16)
+    adj  = _ANON_ADJ[h % len(_ANON_ADJ)]
+    noun = _ANON_NOUN[(h >> 4) % len(_ANON_NOUN)]
+    num  = (h >> 8) % 100
+    return f"{adj}{noun}{num:02d}"
+
+def _anonymize_msg(msg: dict) -> dict:
+    """Replace customer/unknown sender_name with anonymous name for dashboard."""
+    if msg.get("sender_type") in ("customer", None):
+        sid = msg.get("sender_id", "") or ""
+        msg = {**msg, "sender_name": _anon_name(sid) if sid else "Guest"}
+    return msg
+
+
 # ─── Simple in-memory session store ──────────────────────────────────────────
 # token → {"discord_id": str, "username": str, "role": str, "expires": float}
 _SESSIONS: dict[str, dict] = {}
@@ -1185,9 +1207,10 @@ class WebhookServer:
         logger.info(f"Chat WS connected: staff={sess['username']} order={order_id}")
 
         try:
-            # Send chat history on connect
+            # Send chat history on connect (anonymize customer names for dashboard)
             history = await db.get_chat_history(order_id)
-            await ws.send_json({"type": "history", "messages": history})
+            anon_history = [_anonymize_msg(m) for m in history]
+            await ws.send_json({"type": "history", "messages": anon_history})
 
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
@@ -1258,23 +1281,38 @@ class WebhookServer:
         if err:
             return err
         order_id = int(request.match_info["id"])
-        messages = await db.get_chat_history(order_id)
-        return aiohttp.web.json_response(messages)
+        try:
+            messages = await db.get_chat_history(order_id)
+        except Exception:
+            messages = []
+        anon = [_anonymize_msg(m) for m in messages]
+        return aiohttp.web.json_response(anon)
 
     async def _api_chats(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
         """GET /api/chats — Chat inbox: danh sách đơn hàng có tin nhắn (admin/staff)."""
         sess, err = await _check_any(request)
         if err:
             return err
-        inbox = await db.get_chat_inbox()
+        try:
+            inbox = await db.get_chat_inbox()
+        except Exception:
+            logger.warning("get_chat_inbox failed (table may not exist yet)", exc_info=True)
+            inbox = []
+        # Anonymize customer names in last_sender_name
+        for item in inbox:
+            if item.get("last_sender_type") == "customer":
+                order = item.get("order") or {}
+                did = order.get("discord_id", "")
+                item["last_sender_name"] = _anon_name(did) if did else "Guest"
         return aiohttp.web.json_response(inbox)
 
     async def _broadcast_chat(self, order_id: int, message: dict) -> None:
-        """Gửi message tới tất cả WS client đang xem order đó."""
+        """Gửi message tới tất cả WS client đang xem order đó (anonymize customer names)."""
         conns = self._chat_connections.get(order_id)
         if not conns:
             return
-        payload = json.dumps({"type": "message", **message})
+        anon_msg = _anonymize_msg(dict(message))
+        payload = json.dumps({"type": "message", **anon_msg})
         dead: set[aiohttp.web.WebSocketResponse] = set()
         for ws in list(conns):
             try:

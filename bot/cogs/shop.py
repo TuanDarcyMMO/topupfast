@@ -44,7 +44,12 @@ def _package_embed(game, category, packages, balance, locale="en"):
     return embed
 
 
-def _confirm_embed(game, package, game_account, note, balance, locale="en"):
+def _platform_label(platform: str) -> str:
+    return {"ios": "🍎 iOS", "android": "🤖 Android"}.get(platform.lower(), platform.capitalize())
+
+
+def _confirm_embed(game, package, game_account, platform, balance, locale="en"):
+    """platform: 'ios' | 'android'."""
     price = package["price_usd"]
     r2 = lambda n: round(float(n) * 100) / 100
     remaining = r2(balance) - r2(price)
@@ -54,10 +59,9 @@ def _confirm_embed(game, package, game_account, note, balance, locale="en"):
     desc = (
         f"📦 **{pkg_display}**\n"
         f"{tl(locale, 'shop_price_label')} `${price:.2f} USD`\n"
+        f"📱 **Platform:** `{_platform_label(platform)}`\n"
         f"{tl(locale, 'shop_account_label')} `{game_account}`\n"
     )
-    if note:
-        desc += f"{tl(locale, 'shop_note_label')} {note}\n"
     desc += f"\n{tl(locale, 'shop_your_balance')} `${r2(balance):.2f} USD`\n"
     desc += f"{'✅' if remaining >= 0 else '❌'} **{tl(locale, 'shop_after_purchase')}** `${remaining:.2f} USD`"
     if remaining < 0:
@@ -162,27 +166,114 @@ class PackageSelectView(discord.ui.View):
     async def _on_select(self, interaction):
         package_id = interaction.data["values"][0]
         package = await get_package(package_id)
-        await interaction.response.send_modal(GameAccountModal(self.cog, self.game, package))
+        embed = discord.Embed(
+            title=f"{self.game['emoji']} {self.game['name']} — 📱 Chọn nền tảng",
+            description=(
+                f"📦 **{package['name']}** — `${package['price_usd']:.2f}`\n\n"
+                f"Chọn nền tảng bạn muốn nạp:"
+            ),
+            color=discord.Color.blurple(),
+        )
+        if self.game.get("icon_url"):
+            embed.set_thumbnail(url=self.game["icon_url"])
+        view = PlatformSelectView(self.cog, self.game, self.category, package, self.user_balance, self.locale)
+        await interaction.response.edit_message(embed=embed, view=view)
 
 
-class GameAccountModal(discord.ui.Modal):
-    account_input = discord.ui.TextInput(label="Game Account / Username / UID", placeholder="Enter your in-game username or UID", min_length=1, max_length=100)
-    note_input = discord.ui.TextInput(label="Additional Note (optional)", placeholder="Server, region, or any extra info", required=False, max_length=200)
+class PlatformSelectView(discord.ui.View):
+    """Chọn iOS hoặc Android sau khi chọn gói."""
 
-    def __init__(self, cog, game, package):
-        super().__init__(title=f"{game['emoji']} {game['name']} — {package['name']}")
+    def __init__(self, cog, game, category, package, user_balance, locale="en"):
+        super().__init__(timeout=120)
+        self.cog = cog
+        self.game = game
+        self.category = category
+        self.package = package
+        self.user_balance = user_balance
+        self.locale = locale
+
+        pkg_platform = (package.get("platform") or "all").lower()
+        ios_ok = pkg_platform in ("all", "ios")
+        android_ok = pkg_platform in ("all", "android")
+
+        ios_btn = discord.ui.Button(
+            label="🍎 iOS (iCloud)" if ios_ok else "🍎 iOS — Không hỗ trợ",
+            style=discord.ButtonStyle.primary if ios_ok else discord.ButtonStyle.secondary,
+            disabled=not ios_ok,
+            row=0,
+        )
+        android_btn = discord.ui.Button(
+            label="🤖 Android (Google Play)" if android_ok else "🤖 Android — Không hỗ trợ",
+            style=discord.ButtonStyle.success if android_ok else discord.ButtonStyle.secondary,
+            disabled=not android_ok,
+            row=0,
+        )
+        back_btn = discord.ui.Button(label="◀ Back", style=discord.ButtonStyle.secondary, row=1)
+
+        ios_btn.callback = self._on_ios
+        android_btn.callback = self._on_android
+        back_btn.callback = self._on_back
+
+        self.add_item(ios_btn)
+        self.add_item(android_btn)
+        self.add_item(back_btn)
+
+    async def _on_ios(self, interaction):
+        await interaction.response.send_modal(
+            CredentialModal(self.cog, self.game, self.package, "ios", self.user_balance, self.locale)
+        )
+
+    async def _on_android(self, interaction):
+        await interaction.response.send_modal(
+            CredentialModal(self.cog, self.game, self.package, "android", self.user_balance, self.locale)
+        )
+
+    async def _on_back(self, interaction):
+        pkgs = await get_packages(self.game["id"], self.category)
+        view = PackageSelectView(self.cog, self.game, self.category, pkgs, self.user_balance, self.locale)
+        await interaction.response.edit_message(
+            embed=_package_embed(self.game, self.category, pkgs, self.user_balance, self.locale),
+            view=view,
+        )
+
+
+class CredentialModal(discord.ui.Modal):
+    """Modal nhập thông tin tài khoản iOS (iCloud) hoặc Android (Google Play)."""
+
+    def __init__(self, cog, game, package, platform: str, user_balance: float, locale: str = "en"):
+        is_ios = platform == "ios"
+        title = f"{'🍎 iOS' if is_ios else '🤖 Android'} — {game['name']}"
+        super().__init__(title=title)
+
+        account_label = "iCloud Account Email" if is_ios else "Google Play Account Email"
+        account_placeholder = "example@icloud.com" if is_ios else "example@gmail.com"
+        password_label = "iCloud Password" if is_ios else "Google Play Password"
+
+        self.account_input = discord.ui.TextInput(
+            label=account_label, placeholder=account_placeholder, min_length=3, max_length=100
+        )
+        self.password_input = discord.ui.TextInput(
+            label=password_label, placeholder="Nhập mật khẩu của bạn", min_length=1, max_length=100
+        )
+        self.add_item(self.account_input)
+        self.add_item(self.password_input)
+
         self.cog = cog
         self.game = game
         self.package = package
+        self.platform = platform
+        self.user_balance = user_balance
+        self.locale = locale
 
-    async def on_submit(self, interaction):
-        game_account = self.account_input.value.strip()
-        note = self.note_input.value.strip()
-        user = await db.get_user(str(interaction.user.id))
-        balance = user.get("balance", 0.0) if user else 0.0
-        locale = get_locale(interaction.user)
-        embed = _confirm_embed(self.game, self.package, game_account, note, balance, locale)
-        view = ConfirmOrderView(self.cog, self.game, self.package, game_account, note, balance, locale)
+    async def on_submit(self, interaction: discord.Interaction):
+        email = self.account_input.value.strip()
+        password = self.password_input.value
+        # note format parsed by _ticket_embed: "PLATFORM:ios\nPASSWORD:<pw>"
+        note = f"PLATFORM:{self.platform}\nPASSWORD:{password}"
+        locale = self.locale
+        balance = self.user_balance
+        embed = _confirm_embed(self.game, self.package, email, self.platform, balance, locale)
+        view = ConfirmOrderView(self.cog, self.game, self.package, email, note, balance, locale)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 
@@ -273,14 +364,19 @@ class ConfirmOrderView(discord.ui.View):
 
             ticket_info = f"\n📋 Ticket: {ticket_channel.mention}" if ticket_channel else ""
             loc = self.locale
+            # Parse platform from note (format: "PLATFORM:ios\nPASSWORD:xxx")
+            platform_display = ""
+            if self.note and self.note.startswith("PLATFORM:"):
+                plat = self.note.split("\n")[0].replace("PLATFORM:", "").strip()
+                platform_display = f"\n📱 **Platform:** `{_platform_label(plat)}`"
             embed = discord.Embed(
                 title=tl(loc, 'shop_order_success_title'),
                 description=(
                     f"{self.game['emoji']} **{self.game['name']}** — {self.package['name']}\n"
-                    f"{tl(loc, 'shop_paid_label')} `${price:.2f} USD`\n"
-                    f"{tl(loc, 'shop_account_label')} `{self.game_account}`\n"
-                    + (f"{tl(loc, 'shop_note_label')} {self.note}\n" if self.note else "")
-                    + f"\n🔖 Order ID: `{self.package['id']}#{order['id']}`"
+                    f"{tl(loc, 'shop_paid_label')} `${price:.2f} USD`"
+                    + platform_display
+                    + f"\n{tl(loc, 'shop_account_label')} `{self.game_account}`"
+                    + f"\n\n🔖 Order ID: `{self.package['id']}#{order['id']}`"
                     + ticket_info
                 ),
                 color=discord.Color.green(),

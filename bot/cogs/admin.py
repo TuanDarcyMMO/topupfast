@@ -22,6 +22,28 @@ _CLOSE_CUSTOM_ID  = "close_ticket"
 _RULES_CHANNEL_ID = 1498368083499159694
 
 
+def _parse_order_note(note: str) -> tuple[str, str, str]:
+    """Parse note field.
+    New format: 'PLATFORM:ios\\nPASSWORD:xxx'
+    Returns: (platform_label, password, extra_note)
+    """
+    if not note or not note.startswith("PLATFORM:"):
+        return ("", "", note or "")
+    lines = note.split("\n")
+    platform_raw = lines[0].replace("PLATFORM:", "").strip()
+    platform_label = {"ios": "🍎 iOS (iCloud)", "android": "🤖 Android (Google Play)"}.get(
+        platform_raw.lower(), platform_raw.capitalize()
+    )
+    password = ""
+    extra = []
+    for ln in lines[1:]:
+        if ln.startswith("PASSWORD:"):
+            password = ln.replace("PASSWORD:", "").strip()
+        else:
+            extra.append(ln)
+    return platform_label, password, "\n".join(extra)
+
+
 def _ticket_embed(game: dict, package: dict, order: dict, game_account: str, note: str) -> discord.Embed:
     """Embed chi tiết đơn hàng gửi vào ticket channel."""
     parts = package["id"].split(".")
@@ -31,11 +53,22 @@ def _ticket_embed(game: dict, package: dict, order: dict, game_account: str, not
         description=f"📦 **{pkg_display}**",
         color=discord.Color.gold(),
     )
-    embed.add_field(name="💵 Giá",        value=f"`${package['price_usd']:.2f} USD`", inline=True)
-    embed.add_field(name="📱 Platform",   value="🍎 iOS only" if game.get("platform") == "ios" else "📱 iOS & Android", inline=True)
-    embed.add_field(name="👤 Tài khoản",  value=f"`{game_account}`",  inline=False)
-    if note:
-        embed.add_field(name="📝 Ghi chú", value=note, inline=False)
+    embed.add_field(name="💵 Giá", value=f"`${package['price_usd']:.2f} USD`", inline=True)
+
+    platform_label, password, extra_note = _parse_order_note(note)
+    if platform_label:
+        embed.add_field(name="📱 Platform", value=platform_label, inline=True)
+    else:
+        # Fallback to game-level platform when using old flow
+        pkg_plat = game.get("platform", "all")
+        plat_text = "🍎 iOS only" if pkg_plat == "ios" else ("🤖 Android only" if pkg_plat == "android" else "📱 iOS & Android")
+        embed.add_field(name="📱 Platform", value=plat_text, inline=True)
+
+    embed.add_field(name="👤 Tài khoản", value=f"`{game_account}`", inline=False)
+    if password:
+        embed.add_field(name="🔑 Mật khẩu", value=f"||`{password}`||", inline=False)
+    if extra_note:
+        embed.add_field(name="📝 Ghi chú", value=extra_note, inline=False)
     embed.add_field(name="🔖 Order ID",   value=f"`{package['id']}#{order['id']}`", inline=False)
     embed.add_field(name="⏳ Trạng thái", value="Đang chờ xử lý", inline=False)
     if game.get("icon_url"):
