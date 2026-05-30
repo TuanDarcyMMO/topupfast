@@ -58,10 +58,17 @@ def _anon_name(discord_id: str) -> str:
     return f"{adj}{noun}{num:02d}"
 
 def _anonymize_msg(msg: dict) -> dict:
-    """Replace customer/unknown sender_name with anonymous name for dashboard."""
-    if msg.get("sender_type") in ("customer", None):
+    """Replace real sender names with anonymous names for dashboard."""
+    stype = msg.get("sender_type")
+    if stype in ("customer", None):
         sid = msg.get("sender_id", "") or ""
         msg = {**msg, "sender_name": _anon_name(sid) if sid else "Guest"}
+    elif stype == "staff":
+        sid = msg.get("sender_id", "") or ""
+        oid = str(msg.get("order_id", "") or "")
+        # Per-ticket staff anonymization: same staff → same name within 1 ticket
+        key = f"{sid}:{oid}" if sid and oid else sid
+        msg = {**msg, "sender_name": _anon_name(key) if key else "Nhân Viên"}
     return msg
 
 

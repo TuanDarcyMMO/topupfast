@@ -23,14 +23,18 @@ _RULES: list[Tuple[str, str]] = [
 
     # ── 2. Chuyển hướng ra ngoài nền tảng ────────────────────────────────────
     (
-        r"(?:liên\s+hệ|nhắn\s+tin|chat|inbox|pm|dm|nhắn|ib|hmu)\s+"
+        r"(?:liên\s+hệ|liên\s+lạc|nhắn\s+tin|chat|inbox|pm|dm|nhắn|ib|hmu)\s+"
         r"(?:qua|trên|sang|tới|vào|ở|bằng|với)\s+"
         r"(?:ngoài|facebook|fb|zalo|telegram|tele|instagram|insta|"
         r"whatsapp|wa|viber|line|wechat|skype|kik|snapchat|nền\s+tảng\s+khác|kênh\s+khác|chỗ\s+khác)",
         "⚠️ Không được hướng khách liên hệ ngoài nền tảng.",
     ),
     (
-        r"(?:liên\s+hệ|nhắn\s+tin)\s+ngoài",
+        r"(?:liên\s+hệ|liên\s+lạc|nhắn\s+tin)\s+ngoài",
+        "⚠️ Không được hướng khách liên hệ ngoài nền tảng.",
+    ),
+    (
+        r"\bqua\s+(?:zalo|facebook|fb|telegram|tele|whatsapp|wa|instagram|insta|viber|line|skype)\b",
         "⚠️ Không được hướng khách liên hệ ngoài nền tảng.",
     ),
     (
