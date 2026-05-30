@@ -92,6 +92,30 @@ _RULES: list[Tuple[str, str]] = [
         r"(?:" + _PLATFORMS + r")",
         "⚠️ Không được yêu cầu tài khoản nền tảng bên ngoài của khách.",
     ),
+    # 3d. Discord ID / tên discord / discord username
+    (
+        r"(?:discord|dc)\s*(?:id|username|user\b|name|tên|tag)\b",
+        "⚠️ Không được yêu cầu thông tin Discord cá nhân của khách.",
+    ),
+    (
+        r"(?:tên|name|id\b|username|user\b)\s*.{0,15}\bdiscord\b",
+        "⚠️ Không được yêu cầu thông tin Discord cá nhân của khách.",
+    ),
+    (
+        r"\bdiscord\b.{0,20}(?:của|trong\s*server|server\s*của)",
+        "⚠️ Không được yêu cầu thông tin Discord cá nhân của khách.",
+    ),
+
+    # ── 3e. Yêu cầu thông tin cá nhân chung ────────────────────────────────
+    (
+        r"(?:đưa|dua|gửi|gui|cung\s*c[ấa]p|cho\s*(?:mình|minh|tôi|toi|tao|em))\s*.{0,25}"
+        r"(?:thông\s*tin|thong\s*tin)\s*(?:của|cua)\s*(?:b\b|bạn|ban\b|anh|ch[ịi]|em|khách|khach)",
+        "⚠️ Không được yêu cầu thông tin cá nhân của khách.",
+    ),
+    (
+        r"(?:thông\s*tin\s*cá\s*nhân|thong\s*tin\s*ca\s*nhan)",
+        "⚠️ Không được yêu cầu thông tin cá nhân của khách.",
+    ),
 
     # ── 4. Hỏi số điện thoại ─────────────────────────────────────────────────
     # 4a. từ khoá SĐT (có và không dấu, các biến thể)
