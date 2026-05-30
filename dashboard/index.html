@@ -552,31 +552,37 @@
         display: none;
         position: sticky;
         top: 0;
-        z-index: 50;
+        z-index: 150;  /* above sidebar overlay */
         height: 56px;
         background: var(--surface);
         border-bottom: 1px solid var(--border);
         align-items: center;
+        justify-content: space-between;
         padding: 0 16px;
-        gap: 12px;
+        gap: 10px;
       }
       .mobile-topbar-logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-size: 1rem;
         font-weight: 700;
         letter-spacing: -0.02em;
+        color: var(--text);
+        text-decoration: none;
       }
       .hamburger-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         border: 1px solid var(--border);
-        border-radius: 6px;
+        border-radius: 8px;
         background: transparent;
         color: var(--text);
         cursor: pointer;
-        font-size: 1.1rem;
+        font-size: 1.25rem;
         flex-shrink: 0;
       }
       .hamburger-btn:hover {
@@ -1029,14 +1035,24 @@
     <!-- ═══════════════════ APP ═══════════════════ -->
     <div id="app">
       <!-- Sidebar overlay backdrop (mobile) -->
-      <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+      <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+        onclick="closeSidebar()"
+      ></div>
 
       <!-- Mobile topbar -->
       <div class="mobile-topbar">
+        <span class="mobile-topbar-logo">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="22" height="22" rx="6" fill="var(--accent)" />
+            <path d="M6 11h10M11 6l5 5-5 5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span><span class="sidebar-logo-mark">TopUp</span>Fast</span>
+        </span>
         <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
-          <i class="ph ph-list"></i>
+          <i class="ph ph-list" id="hamburger-icon"></i>
         </button>
-        <span class="mobile-topbar-logo"><span class="sidebar-logo-mark">TopUp</span>Fast</span>
       </div>
 
       <!-- Sidebar -->
@@ -2448,12 +2464,20 @@
 
       // ── Navigation ─────────────────────────────────────────────────────────────
       function toggleSidebar() {
-        document.querySelector(".sidebar").classList.toggle("open");
-        document.getElementById("sidebar-overlay").classList.toggle("open");
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        const icon = document.getElementById("hamburger-icon");
+        const isOpen = sidebar.classList.toggle("open");
+        overlay.classList.toggle("open", isOpen);
+        if (icon) {
+          icon.className = isOpen ? "ph ph-x" : "ph ph-list";
+        }
       }
       function closeSidebar() {
         document.querySelector(".sidebar").classList.remove("open");
         document.getElementById("sidebar-overlay").classList.remove("open");
+        const icon = document.getElementById("hamburger-icon");
+        if (icon) icon.className = "ph ph-list";
       }
 
       function showPage(name) {
