@@ -4,31 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TopUpFast Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
     <style>
       :root {
-        --bg: #f4f6fb;
+        --bg: #f8fafc;
         --surface: #ffffff;
-        --surface2: #f0f2f8;
+        --surface2: #f1f5f9;
         --border: #e2e8f0;
-        --text: #1a202c;
+        --text: #0f172a;
         --text2: #64748b;
-        --accent: #6366f1;
-        --accent-hover: #4f46e5;
-        --green: #22c55e;
+        --accent: #0ea5e9;
+        --accent-hover: #0284c7;
+        --accent-muted: #e0f2fe;
+        --green: #10b981;
         --yellow: #f59e0b;
         --red: #ef4444;
         --blue: #3b82f6;
-        --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
-        --radius: 12px;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --radius: 8px;
       }
       [data-theme="dark"] {
-        --bg: #0f1117;
-        --surface: #1a1d27;
-        --surface2: #252836;
-        --border: #2d3148;
-        --text: #e2e8f0;
-        --text2: #94a3b8;
-        --card-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+        --bg: #0d1117;
+        --surface: #161b22;
+        --surface2: #21262d;
+        --border: #30363d;
+        --text: #e6edf3;
+        --text2: #8b949e;
+        --accent: #38bdf8;
+        --accent-hover: #0ea5e9;
+        --accent-muted: #0c2d3f;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
       }
       * {
         box-sizing: border-box;
@@ -36,10 +44,12 @@
         padding: 0;
       }
       body {
-        font-family: "Segoe UI", system-ui, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         background: var(--bg);
         color: var(--text);
         min-height: 100vh;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
         transition:
           background 0.2s,
           color 0.2s;
@@ -57,17 +67,22 @@
         border-radius: var(--radius);
         padding: 40px;
         width: 360px;
-        box-shadow: var(--card-shadow);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--border);
       }
-      .auth-card h1 {
-        font-size: 1.5rem;
+      .auth-brand {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
         margin-bottom: 6px;
+      }
+      .auth-brand-accent {
         color: var(--accent);
       }
-      .auth-card p {
+      .auth-card > p {
         color: var(--text2);
-        margin-bottom: 24px;
-        font-size: 0.9rem;
+        margin-bottom: 28px;
+        font-size: 0.875rem;
       }
       .form-group {
         margin-bottom: 16px;
@@ -81,12 +96,13 @@
       }
       .form-group input {
         width: 100%;
-        padding: 10px 14px;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
         background: var(--surface2);
         color: var(--text);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        font-family: inherit;
         outline: none;
         transition: border 0.15s;
       }
@@ -96,16 +112,18 @@
       .btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 10px 20px;
+        gap: 5px;
+        padding: 9px 18px;
         border: none;
-        border-radius: 8px;
-        font-size: 0.9rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
         font-weight: 600;
         cursor: pointer;
+        font-family: inherit;
         transition:
-          background 0.15s,
-          transform 0.1s;
+          background 0.12s,
+          opacity 0.12s,
+          transform 0.08s;
       }
       .btn:active {
         transform: scale(0.97);
@@ -126,8 +144,8 @@
         color: #fff;
       }
       .btn-sm {
-        padding: 6px 14px;
-        font-size: 0.82rem;
+        padding: 5px 12px;
+        font-size: 0.8rem;
       }
       .btn-full {
         width: 100%;
@@ -148,71 +166,85 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: 220px;
+        width: 224px;
         height: 100vh;
         background: var(--surface);
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
-        padding: 20px 0;
+        padding: 0;
         z-index: 10;
       }
       .sidebar-logo {
-        padding: 0 20px 20px;
-        font-size: 1.1rem;
+        padding: 18px 20px;
+        font-size: 1rem;
         font-weight: 700;
-        color: var(--accent);
+        letter-spacing: -0.02em;
+        color: var(--text);
         border-bottom: 1px solid var(--border);
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 60px;
+      }
+      .sidebar-logo-mark {
+        color: var(--accent);
       }
       .nav-item {
-        padding: 10px 20px;
+        padding: 8px 16px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-size: 0.9rem;
+        gap: 9px;
+        font-size: 0.875rem;
+        font-weight: 500;
         color: var(--text2);
-        border-radius: 0;
-        transition: all 0.15s;
-        border-left: 3px solid transparent;
+        border-radius: 6px;
+        margin: 1px 8px;
+        transition: all 0.12s;
+        border-left: none;
       }
       .nav-item:hover {
         background: var(--surface2);
         color: var(--text);
       }
       .nav-item.active {
-        background: var(--surface2);
+        background: var(--accent-muted);
         color: var(--accent);
-        border-left-color: var(--accent);
         font-weight: 600;
       }
-      .nav-item span.icon {
+      .nav-item i {
         font-size: 1rem;
+        flex-shrink: 0;
+        width: 18px;
+        text-align: center;
       }
       .sidebar-bottom {
         margin-top: auto;
-        padding: 0 20px;
+        padding: 12px 8px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
+        border-top: 1px solid var(--border);
       }
       .user-chip {
         background: var(--surface2);
-        border-radius: 8px;
+        border-radius: 6px;
         padding: 10px 12px;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         color: var(--text2);
       }
       .user-chip strong {
         display: block;
         color: var(--text);
-        font-size: 0.9rem;
+        font-size: 0.875rem;
+        font-weight: 600;
       }
 
       .main {
-        margin-left: 220px;
-        padding: 28px;
+        margin-left: 224px;
+        padding: 24px 28px;
         min-height: 100vh;
       }
       .page {
@@ -222,9 +254,11 @@
         display: block;
       }
       .page-title {
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         font-weight: 700;
         margin-bottom: 20px;
+        letter-spacing: -0.02em;
+        color: var(--text);
       }
 
       /* ── Stats cards ──────────────────────────────── */
@@ -238,20 +272,21 @@
         background: var(--surface);
         border-radius: var(--radius);
         padding: 20px;
-        box-shadow: var(--card-shadow);
         border: 1px solid var(--border);
       }
       .stat-card .label {
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: var(--text2);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 8px;
+        letter-spacing: 0.07em;
+        margin-bottom: 10px;
       }
       .stat-card .value {
-        font-size: 1.8rem;
+        font-size: 1.75rem;
         font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
       }
       .stat-card.green .value {
         color: var(--green);
@@ -273,7 +308,6 @@
       .table-wrap {
         background: var(--surface);
         border-radius: var(--radius);
-        box-shadow: var(--card-shadow);
         border: 1px solid var(--border);
         overflow: hidden;
       }
@@ -295,15 +329,16 @@
         gap: 8px;
       }
       .filter-btn {
-        padding: 6px 14px;
-        border-radius: 20px;
-        border: 1.5px solid var(--border);
+        padding: 5px 12px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
         background: transparent;
         color: var(--text2);
         cursor: pointer;
-        font-size: 0.82rem;
-        font-weight: 600;
-        transition: all 0.15s;
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-family: inherit;
+        transition: all 0.12s;
       }
       .filter-btn.active,
       .filter-btn:hover {
@@ -441,7 +476,8 @@
         padding: 28px;
         width: 420px;
         max-width: 95vw;
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
       }
       .modal h3 {
         margin-bottom: 16px;
@@ -470,12 +506,21 @@
       .theme-toggle {
         background: var(--surface2);
         border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: 8px;
-        padding: 8px 12px;
+        color: var(--text2);
+        border-radius: 6px;
+        padding: 7px 12px;
         cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.12s, background 0.12s;
+      }
+      .theme-toggle:hover {
+        color: var(--text);
+        background: var(--border);
       }
       .empty-state {
         padding: 40px;
@@ -742,12 +787,13 @@
         background: var(--surface2);
       }
       .chat-conv-item.active {
-        background: var(--blue);
-        color: #fff;
+        background: var(--accent-muted);
+        color: var(--accent);
       }
       .chat-conv-item.active .chat-conv-time,
       .chat-conv-item.active .chat-conv-preview {
-        color: rgba(255, 255, 255, 0.75);
+        color: var(--accent);
+        opacity: 0.7;
       }
       .chat-conv-unread {
         display: inline-flex;
@@ -862,7 +908,7 @@
     <!-- ═══════════════════ LOGIN ═══════════════════ -->
     <div id="auth-screen">
       <div class="auth-card">
-        <h1>🚀 TopUpFast</h1>
+        <div class="auth-brand"><span class="auth-brand-accent">TopUp</span>Fast</div>
         <p>Staff Dashboard — Sign in to continue</p>
         <div class="form-group">
           <label>Username</label>
@@ -895,13 +941,19 @@
     <div id="app">
       <!-- Sidebar -->
       <nav class="sidebar">
-        <div class="sidebar-logo">⚡ TopUpFast</div>
+        <div class="sidebar-logo">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="22" height="22" rx="6" fill="var(--accent)"/>
+            <path d="M6 11h10M11 6l5 5-5 5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span><span class="sidebar-logo-mark">TopUp</span>Fast</span>
+        </div>
         <div
           class="nav-item active"
           onclick="showPage('orders')"
           id="nav-orders"
         >
-          <span class="icon">📋</span> Orders
+          <i class="ph ph-list-bullets"></i> Orders
         </div>
         <div
           class="nav-item"
@@ -909,7 +961,7 @@
           id="nav-stats"
           style="display: none"
         >
-          <span class="icon">📊</span> Dashboard
+          <i class="ph ph-chart-bar"></i> Dashboard
         </div>
         <div
           class="nav-item"
@@ -917,7 +969,7 @@
           id="nav-staff"
           style="display: none"
         >
-          <span class="icon">👥</span> Staff
+          <i class="ph ph-users"></i> Staff
         </div>
         <div
           class="nav-item"
@@ -925,7 +977,7 @@
           id="nav-my-orders"
           style="display: none"
         >
-          <span class="icon">📌</span> My Orders
+          <i class="ph ph-bookmark-simple"></i> My Orders
         </div>
         <div
           class="nav-item"
@@ -933,10 +985,10 @@
           id="nav-withdraw"
           style="display: none"
         >
-          <span class="icon">💸</span> Withdraw
+          <i class="ph ph-wallet"></i> Withdraw
           <span
             id="nav-balance-badge"
-            style="margin-left: auto; font-size: 0.75rem; color: var(--green)"
+            style="margin-left: auto; font-size: 0.72rem; color: var(--green)"
           ></span>
         </div>
         <div
@@ -945,7 +997,7 @@
           id="nav-withdrawals-admin"
           style="display: none"
         >
-          <span class="icon">💳</span> Approve Withdrawals
+          <i class="ph ph-credit-card"></i> Approve Withdrawals
         </div>
         <div
           class="nav-item"
@@ -953,7 +1005,7 @@
           id="nav-orders-search"
           style="display: none"
         >
-          <span class="icon">🔍</span> Search Orders
+          <i class="ph ph-magnifying-glass"></i> Search Orders
         </div>
         <div
           class="nav-item"
@@ -961,7 +1013,7 @@
           id="nav-games"
           style="display: none"
         >
-          <span class="icon">🎮</span> Games &amp; Packages
+          <i class="ph ph-game-controller"></i> Games &amp; Packages
         </div>
         <div
           class="nav-item"
@@ -969,23 +1021,23 @@
           id="nav-chat"
           style="display: none"
         >
-          <span class="icon">💬</span> Chats
+          <i class="ph ph-chat-dots"></i> Chats
           <span id="nav-chat-badge" style="display: none"></span>
         </div>
         <div class="sidebar-bottom">
           <button class="theme-toggle" onclick="toggleTheme()">
-            🌙 Toggle Theme
+            <i class="ph ph-moon" id="theme-icon"></i> Theme
           </button>
           <div class="user-chip">
             <strong id="sidebar-username">—</strong>
             <span id="sidebar-role">—</span>
             <small
               id="sidebar-balance"
-              style="color: var(--green); margin-top: 2px"
+              style="color: var(--green); margin-top: 2px; display: block"
             ></small>
           </div>
           <button class="btn btn-danger btn-sm btn-full" onclick="doLogout()">
-            Sign Out
+            <i class="ph ph-sign-out"></i> Sign Out
           </button>
         </div>
       </nav>
@@ -993,7 +1045,7 @@
       <main class="main">
         <!-- ── Orders page ── -->
         <div class="page active" id="page-orders">
-          <div class="page-title">📋 Orders</div>
+          <div class="page-title">Orders</div>
           <div class="table-wrap">
             <div class="table-header">
               <h2>All Orders</h2>
@@ -1024,7 +1076,7 @@
                 </button>
               </div>
               <button class="btn btn-primary btn-sm" onclick="loadOrders()">
-                🔄 Refresh
+                <i class="ph ph-arrow-clockwise"></i> Refresh
               </button>
             </div>
             <div id="orders-table-wrap">
@@ -1035,7 +1087,7 @@
 
         <!-- ── My Orders page (all staff) ── -->
         <div class="page" id="page-my-orders">
-          <div class="page-title">📌My Order</div>
+          <div class="page-title">My Orders</div>
           <div class="table-wrap">
             <div class="table-header">
               <h2>Đơn của tôi</h2>
@@ -1066,8 +1118,8 @@
                 </button>
               </div>
               <button class="btn btn-primary btn-sm" onclick="loadMyOrders()">
-                🔄 Refresh
-              </button>
+              <i class="ph ph-arrow-clockwise"></i> Refresh
+            </button>
             </div>
             <div id="my-orders-table-wrap">
               <div class="empty-state">Loading...</div>
@@ -1077,7 +1129,7 @@
 
         <!-- ── Stats page (admin) ── -->
         <div class="page" id="page-stats">
-          <div class="page-title">📊 Admin Dashboard</div>
+          <div class="page-title">Dashboard</div>
           <div class="stats-grid" id="stats-grid">
             <div class="empty-state">Loading...</div>
           </div>
@@ -1085,7 +1137,7 @@
             <div class="table-header">
               <h2>Recent Orders</h2>
               <button class="btn btn-primary btn-sm" onclick="loadStats()">
-                🔄 Refresh
+                <i class="ph ph-arrow-clockwise"></i> Refresh
               </button>
             </div>
             <div id="recent-orders-wrap">
@@ -1096,12 +1148,12 @@
 
         <!-- ── Staff list (admin) ── -->
         <div class="page" id="page-staff-list">
-          <div class="page-title">👥 Staff List</div>
+          <div class="page-title">Staff</div>
           <div class="table-wrap">
             <div class="table-header">
               <h2>All Staff</h2>
               <button class="btn btn-primary btn-sm" onclick="loadStaff()">
-                🔄 Refresh
+                <i class="ph ph-arrow-clockwise"></i> Refresh
               </button>
             </div>
             <div id="staff-table-wrap">
@@ -1112,7 +1164,7 @@
 
         <!-- ── Withdraw page (staff) ── -->
         <div class="page" id="page-withdraw">
-          <div class="page-title">💸 Rút tiền</div>
+          <div class="page-title">Rút tiền</div>
 
           <!-- Balance card -->
           <div class="stats-grid" style="margin-bottom: 24px">
@@ -1139,10 +1191,10 @@
           <!-- Bank accounts -->
           <div class="table-wrap" style="margin-bottom: 24px">
             <div class="table-header">
-              <h2>🏦 Tài khoản ngân hàng</h2>
+              <h2>Tài khoản ngân hàng</h2>
               <button class="btn btn-primary btn-sm" onclick="openAddBank()">
-                + Thêm STK
-              </button>
+              <i class="ph ph-plus"></i> Thêm STK
+            </button>
             </div>
             <div id="bank-accounts-wrap">
               <div class="empty-state">Loading...</div>
@@ -1152,12 +1204,12 @@
           <!-- Withdraw request -->
           <div class="table-wrap" style="margin-bottom: 24px">
             <div class="table-header">
-              <h2>💵 Yêu cầu rút tiền</h2>
+              <h2>Yêu cầu rút tiền</h2>
               <button
                 class="btn btn-primary btn-sm"
                 onclick="loadMyWithdrawals()"
               >
-                🔄 Refresh
+                <i class="ph ph-arrow-clockwise"></i> Refresh
               </button>
             </div>
             <div
@@ -1228,8 +1280,8 @@
                 "
               ></div>
               <button class="btn btn-success" onclick="submitWithdraw()">
-                💸 Rút tiền
-              </button>
+              <i class="ph ph-wallet"></i> Rút tiền
+            </button>
             </div>
             <div id="my-withdrawals-wrap">
               <div class="empty-state">Chưa có yêu cầu rút tiền.</div>
@@ -1239,7 +1291,7 @@
 
         <!-- ── Withdrawals admin page ── -->
         <div class="page" id="page-withdrawals-admin">
-          <div class="page-title">💳 Duyệt rút tiền</div>
+          <div class="page-title">Duyệt rút tiền</div>
           <div class="table-wrap">
             <div class="table-header">
               <h2>Yêu cầu rút tiền</h2>
@@ -1273,7 +1325,7 @@
                 class="btn btn-primary btn-sm"
                 onclick="loadWithdrawals()"
               >
-                🔄 Refresh
+                <i class="ph ph-arrow-clockwise"></i> Refresh
               </button>
             </div>
             <div id="withdrawals-table-wrap">
@@ -1284,7 +1336,7 @@
 
         <!-- ── Orders search (admin) ── -->
         <div class="page" id="page-orders-search">
-          <div class="page-title">🔍 Tìm & Xuất đơn</div>
+          <div class="page-title">Tìm &amp; Xuất đơn</div>
           <div class="table-wrap">
             <div class="table-header" style="flex-wrap: wrap; gap: 8px">
               <h2>Lọc đơn hàng</h2>
@@ -1354,15 +1406,15 @@
                 <option value="failed">Failed</option>
               </select>
               <button class="btn btn-primary btn-sm" onclick="runOrderSearch()">
-                🔍 Tìm
-              </button>
-              <button
-                class="btn btn-sm"
-                style="background: var(--surface2); color: var(--text)"
-                onclick="exportOrdersCSV()"
-              >
-                ⬇️ Xuất CSV
-              </button>
+              <i class="ph ph-magnifying-glass"></i> Tìm
+            </button>
+            <button
+              class="btn btn-sm"
+              style="background: var(--surface2); color: var(--text)"
+              onclick="exportOrdersCSV()"
+            >
+              <i class="ph ph-download-simple"></i> Xuất CSV
+            </button>
             </div>
             <div id="search-results-wrap">
               <div class="empty-state">Nhập điều kiện và bấm Tìm.</div>
@@ -1372,16 +1424,13 @@
 
         <!-- ── Games & Packages manager (admin) ── -->
         <div class="page" id="page-games">
-          <div class="page-title">🎮 Quản lý Games &amp; Gói nạp</div>
+          <div class="page-title">Games &amp; Gói nạp</div>
           <div class="table-wrap" style="margin-bottom: 20px">
             <div class="table-header">
               <h2>Danh sách Game</h2>
-              <button
-                class="btn btn-primary btn-sm"
-                onclick="openAddGameModal()"
-              >
-                + Thêm Game
-              </button>
+              <button class="btn btn-primary btn-sm" onclick="openAddGameModal()">
+              <i class="ph ph-plus"></i> Thêm Game
+            </button>
             </div>
             <div id="games-list-wrap">
               <div class="empty-state">Đang tải...</div>
@@ -1396,12 +1445,9 @@
                   style="color: var(--primary)"
                 ></span>
               </h2>
-              <button
-                class="btn btn-primary btn-sm"
-                onclick="openAddPackageModal()"
-              >
-                + Thêm Gói
-              </button>
+              <button class="btn btn-primary btn-sm" onclick="openAddPackageModal()">
+              <i class="ph ph-plus"></i> Thêm Gói
+            </button>
               <button
                 class="btn btn-sm"
                 onclick="closePackagesSection()"
@@ -1418,18 +1464,14 @@
 
         <!-- ── Chat Inbox page ── -->
         <div class="page" id="page-chat">
-          <div class="page-title">💬 Chats</div>
+          <div class="page-title">Chats</div>
           <div class="chat-inbox-layout">
             <div class="chat-inbox-list">
               <div class="chat-inbox-list-header">
                 Cuộc trò chuyện
-                <button
-                  class="btn btn-sm btn-primary"
-                  onclick="loadChatPage()"
-                  style="font-size: 0.75rem; padding: 3px 9px"
-                >
-                  🔄
-                </button>
+                <button class="btn btn-sm btn-primary" onclick="loadChatPage()" style="font-size: 0.75rem; padding: 3px 9px">
+                <i class="ph ph-arrow-clockwise"></i>
+              </button>
               </div>
               <div id="inbox-conv-list" style="overflow-y: auto; flex: 1">
                 <div class="empty-state" style="padding: 30px">Loading...</div>
@@ -1499,7 +1541,7 @@
           gap: 14px;
         "
       >
-        <h3 id="game-modal-title">➕ Thêm Game</h3>
+        <h3 id="game-modal-title">Thêm Game</h3>
         <label style="font-size: 0.8rem; color: var(--text2)"
           >ID Game (chữ thường, không dấu) *
           <input
@@ -1628,7 +1670,7 @@
             Hủy
           </button>
           <button class="btn btn-primary btn-sm" onclick="saveGame()">
-            💾 Lưu
+            Lưu
           </button>
         </div>
       </div>
@@ -1661,7 +1703,7 @@
           gap: 14px;
         "
       >
-        <h3 id="pkg-modal-title">➕ Thêm Gói</h3>
+        <h3 id="pkg-modal-title">Thêm Gói</h3>
         <label style="font-size: 0.8rem; color: var(--text2)"
           >Tên gói *
           <input
@@ -1791,7 +1833,7 @@
             Hủy
           </button>
           <button class="btn btn-primary btn-sm" onclick="savePackage()">
-            💾 Lưu
+            Lưu
           </button>
         </div>
       </div>
@@ -1800,7 +1842,7 @@
     <!-- ── Add bank account modal ── -->
     <div class="modal-bg" id="add-bank-modal">
       <div class="modal" style="max-width: 480px">
-        <h3>🏦 Thêm tài khoản ngân hàng</h3>
+        <h3>Thêm tài khoản ngân hàng</h3>
         <div style="display: flex; flex-direction: column; gap: 10px">
           <div>
             <label style="font-size: 0.8rem; color: var(--text2)"
@@ -1916,7 +1958,7 @@
             Huỷ
           </button>
           <button class="btn btn-success" onclick="submitAddBank()">
-            💾 Lưu
+            Lưu
           </button>
         </div>
       </div>
@@ -1925,7 +1967,7 @@
     <!-- ── Withdrawal complete modal (admin) ── -->
     <div class="modal-bg" id="wd-complete-modal">
       <div class="modal">
-        <h3>✅ Xác nhận đã thanh toán #<span id="wd-complete-id"></span></h3>
+        <h3>Xác nhận đã thanh toán #<span id="wd-complete-id"></span></h3>
         <label
           style="
             font-size: 0.85rem;
@@ -1949,7 +1991,7 @@
             Huỷ
           </button>
           <button class="btn btn-success" onclick="submitWdComplete()">
-            ✅ Đánh dấu đã thanh toán
+            Đánh dấu đã thanh toán
           </button>
         </div>
       </div>
@@ -1958,7 +2000,7 @@
     <!-- ── Withdrawal reject modal (admin) ── -->
     <div class="modal-bg" id="wd-reject-modal">
       <div class="modal">
-        <h3>❌ Từ chối rút tiền #<span id="wd-reject-id"></span></h3>
+        <h3>Đẹ xuất rút tiền #<span id="wd-reject-id"></span></h3>
         <label
           style="
             font-size: 0.85rem;
@@ -1982,7 +2024,7 @@
             Huỷ
           </button>
           <button class="btn btn-danger" onclick="submitWdReject()">
-            ❌ Từ chối & hoàn tiền
+            Từ chối &amp; hoàn tiền
           </button>
         </div>
       </div>
@@ -1991,7 +2033,7 @@
     <!-- ── Reject modal ── -->
     <div class="modal-bg" id="reject-modal">
       <div class="modal">
-        <h3>❌ Reject Order #<span id="reject-modal-order-id"></span></h3>
+        <h3>Reject Order #<span id="reject-modal-order-id"></span></h3>
         <label
           style="
             font-size: 0.85rem;
@@ -2033,7 +2075,7 @@
             Huỷ
           </button>
           <button class="btn btn-danger" onclick="submitReject()">
-            ❌ Xác nhận từ chối
+            Xác nhận từ chối
           </button>
         </div>
       </div>
@@ -2043,7 +2085,7 @@
     <div class="modal-bg" id="deny-refund-modal">
       <div class="modal">
         <h3>
-          ❌ Từ chối hoàn tiền Đơn #<span
+          Từ chối hoàn tiền Đơn #<span
             id="deny-refund-modal-order-id"
           ></span>
         </h3>
@@ -2071,7 +2113,7 @@
             Huỷ
           </button>
           <button class="btn btn-danger" onclick="submitDenyRefund()">
-            ❌ Từ chối hoàn tiền
+            Từ chối hoàn tiền
           </button>
         </div>
       </div>
@@ -2080,7 +2122,7 @@
     <!-- ── Refund modal ── -->
     <div class="modal-bg" id="refund-modal">
       <div class="modal">
-        <h3>💸 Refund Order #<span id="refund-modal-order-id"></span></h3>
+        <h3>Refund Order #<span id="refund-modal-order-id"></span></h3>
         <label
           style="
             font-size: 0.85rem;
@@ -2104,7 +2146,7 @@
             Cancel
           </button>
           <button class="btn btn-danger" onclick="submitRefund()">
-            💸 Confirm Refund
+            Confirm Refund
           </button>
         </div>
       </div>
@@ -2113,7 +2155,7 @@
     <!-- ── Staff violations modal ── -->
     <div class="modal-bg" id="violations-modal">
       <div class="modal" style="max-width: 700px; width: 95%">
-        <h3 id="violations-modal-title">📋 Lịch sử vi phạm</h3>
+        <h3 id="violations-modal-title">Lịch sử vi phạm</h3>
         <div
           id="violations-modal-body"
           style="max-height: 420px; overflow-y: auto"
@@ -2133,7 +2175,7 @@
     <!-- ── Complete modal ── -->
     <div class="modal-bg" id="complete-modal">
       <div class="modal">
-        <h3>✅ Complete Order #<span id="modal-order-id"></span></h3>
+        <h3>Complete Order #<span id="modal-order-id"></span></h3>
         <label
           style="
             font-size: 0.85rem;
@@ -2157,7 +2199,7 @@
             Cancel
           </button>
           <button class="btn btn-success" onclick="submitComplete()">
-            ✅ Mark Complete
+            Mark Complete
           </button>
         </div>
       </div>
@@ -2198,12 +2240,18 @@
       function initTheme() {
         const saved = localStorage.getItem("theme") || "light";
         document.documentElement.setAttribute("data-theme", saved);
+        window.addEventListener("DOMContentLoaded", () => {
+          const icon = document.getElementById("theme-icon");
+          if (icon) icon.className = saved === "dark" ? "ph ph-moon" : "ph ph-sun";
+        });
       }
       function toggleTheme() {
         const cur = document.documentElement.getAttribute("data-theme");
         const next = cur === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", next);
         localStorage.setItem("theme", next);
+        const icon = document.getElementById("theme-icon");
+        if (icon) icon.className = next === "dark" ? "ph ph-moon" : "ph ph-sun";
       }
       initTheme();
 
@@ -2387,7 +2435,7 @@
           !["refunded", "completed", "failed", "refund_requested"].includes(
             o.status,
           )
-            ? `<button class="btn btn-danger btn-sm" onclick="openRefund(${o.id})" style="margin-top:4px">💸 Refund</button>`
+            ? `<button class="btn btn-danger btn-sm" onclick="openRefund(${o.id})" style="margin-top:4px">Refund</button>`
             : "";
         // Reject button for staff on pending/delivering orders
         const rejectBtn = ["pending", "delivering"].includes(o.status)
@@ -2396,10 +2444,10 @@
 
         if (o.status === "pending") {
           return [
-            `<button class="btn btn-primary btn-sm" onclick="claimOrder(${o.id})">🙋 Claim</button>`,
+            `<button class="btn btn-primary btn-sm" onclick="claimOrder(${o.id})">Claim</button>`,
             rejectBtn,
             directRefundBtn,
-            `<button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`,
+            `<button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">Chat</button>`,
           ]
             .filter(Boolean)
             .join("<br>");
@@ -2411,10 +2459,10 @@
           return (
             claimInfo +
             [
-              `<button class="btn btn-success btn-sm" onclick="openComplete(${o.id})">✅ Complete</button>`,
+              `<button class="btn btn-success btn-sm" onclick="openComplete(${o.id})">Complete</button>`,
               rejectBtn,
               directRefundBtn,
-              `<button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`,
+              `<button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">Chat</button>`,
             ]
               .filter(Boolean)
               .join("<br>")
@@ -2427,14 +2475,14 @@
           if (isAdmin) {
             return (
               staffInfo +
-              `<button class="btn btn-success btn-sm" onclick="approveRefund(${o.id})">✅ Approve</button><br>` +
-              `<button class="btn btn-danger btn-sm" onclick="openDenyRefund(${o.id})" style="margin-top:4px">❌ Deny</button>` +
-              `<br><button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`
+              `<button class="btn btn-success btn-sm" onclick="approveRefund(${o.id})">Approve</button><br>` +
+              `<button class="btn btn-danger btn-sm" onclick="openDenyRefund(${o.id})" style="margin-top:4px">Deny</button>` +
+              `<br><button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">Chat</button>`
             );
           }
           return (
             staffInfo +
-            `<small style="color:var(--text2)">⏳ Đợi admin duyệt</small>` +
+            `<small style="color:var(--text2)">Đợi admin duyệt</small>` +
             `<br><button class="btn btn-sm chat-btn" onclick="openChat(${o.id})" style="margin-top:4px;background:var(--blue);color:#fff">💬 Chat</button>`
           );
         }
@@ -2442,7 +2490,7 @@
           const note = o.delivery_note
             ? `<br><small style="color:var(--text2)">${o.delivery_note}</small>`
             : "";
-          return `<small style="color:var(--text2)">✅ ${o.completed_by || ""}<br>${fmtDate(o.completed_at)}${note}</small>`;
+          return `<small style="color:var(--text2)">${o.completed_by || ""}<br>${fmtDate(o.completed_at)}${note}</small>`;
         }
         if (o.status === "refunded") {
           return `<small style="color:var(--text2)">💰 Refunded<br>${fmtDate(o.completed_at)}</small>`;
@@ -2665,7 +2713,7 @@
 
       async function openViolationsModal(discordId, username) {
         document.getElementById("violations-modal-title").textContent =
-          `📋 Lịch sử vi phạm — ${username}`;
+          `Lịch sử vi phạm — ${username}`;
         document.getElementById("violations-modal-body").innerHTML =
           '<div class="empty-state">Đang tải...</div>';
         document.getElementById("violations-modal").classList.add("open");
@@ -2988,8 +3036,8 @@
   <td>${
     w.status === "pending"
       ? `
-    <button class="btn btn-success btn-sm" onclick="openWdComplete(${w.id})">✅ Đã TT</button><br>
-    <button class="btn btn-danger btn-sm" onclick="openWdReject(${w.id})" style="margin-top:4px">❌ Từ chối</button>
+    <button class="btn btn-success btn-sm" onclick="openWdComplete(${w.id})">Đã TT</button><br>
+    <button class="btn btn-danger btn-sm" onclick="openWdReject(${w.id})" style="margin-top:4px">Từ chối</button>
   `
       : `<small style="color:var(--text2)">${w.admin_note || fmtDate(w.completed_at)}</small>`
   }</td>
@@ -3965,7 +4013,7 @@
     <div class="chat-panel" id="chat-panel">
       <div class="chat-panel-header">
         <span class="chat-status-dot" id="chat-status-dot"></span>
-        <h3>💬 Chat &mdash; Đơn <span id="chat-order-title">#</span></h3>
+        <h3>Chat &mdash; Đơn <span id="chat-order-title">#</span></h3>
         <button
           class="btn btn-sm"
           onclick="closeChat()"
