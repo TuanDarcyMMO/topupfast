@@ -734,6 +734,35 @@
       .chat-conv-item.active .chat-conv-preview {
         color: rgba(255, 255, 255, 0.75);
       }
+      .chat-conv-unread {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        background: #e53e3e;
+        color: #fff;
+        border-radius: 9px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0 4px;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      #nav-chat-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 16px;
+        height: 16px;
+        background: #e53e3e;
+        color: #fff;
+        border-radius: 8px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 0 3px;
+        margin-left: auto;
+      }
       .chat-conv-order {
         font-weight: 600;
         font-size: 0.83rem;
@@ -926,6 +955,7 @@
           style="display: none"
         >
           <span class="icon">💬</span> Chats
+          <span id="nav-chat-badge" style="display:none"></span>
         </div>
         <div class="sidebar-bottom">
           <button class="theme-toggle" onclick="toggleTheme()">
@@ -2174,6 +2204,7 @@
 
       function doLogout() {
         _me = null;
+        disconnectGlobalInboxWs();
         fetch("/api/logout", {
           method: "POST",
           credentials: "same-origin",
@@ -2209,6 +2240,8 @@
 
         showPage("orders");
         loadOrders();
+        // Start real-time inbox WebSocket (admin only)
+        if (_me.role === "admin") connectGlobalInboxWs();
       }
 
       // ── Navigation ─────────────────────────────────────────────────────────────
@@ -3337,6 +3370,121 @@
       let _inboxConvs = [];
       let _inboxPollTimer = null;
 
+      // ── Global inbox WebSocket (real-time new message notifications) ─────────
+      let _globalInboxWs = null;
+      let _globalInboxReconnectTimer = null;
+      let _unreadCounts = {}; // order_id → unread count
+
+      function connectGlobalInboxWs() {
+        if (_globalInboxWs && _globalInboxWs.readyState === WebSocket.OPEN) return;
+        const tokenCookie = document.cookie
+          .split(";")
+          .find((c) => c.trim().startsWith("session_token="));
+        const token = tokenCookie ? tokenCookie.split("=")[1].trim() : "";
+        const proto = location.protocol === "https:" ? "wss:" : "ws:";
+        const ws = new WebSocket(
+          `${proto}//${location.host}/ws/inbox?token=${token}`
+        );
+        _globalInboxWs = ws;
+        ws.onopen = () => {
+          clearTimeout(_globalInboxReconnectTimer);
+          _globalInboxReconnectTimer = null;
+        };
+        ws.onmessage = (evt) => {
+          let data;
+          try { data = JSON.parse(evt.data); } catch { return; }
+          if (data.type !== "new_message") return;
+
+          const onChatPage = document.getElementById("page-chat")?.classList.contains("active");
+          const isCurrentOrder = _inboxOrderId === data.order_id;
+
+          if (onChatPage && isCurrentOrder) {
+            // Panel already open — scroll update handled by per-order WS
+          } else {
+            // Increment unread badge
+            _unreadCounts[data.order_id] = (_unreadCounts[data.order_id] || 0) + 1;
+            _updateNavChatBadge();
+            _updateConvItemBadge(data.order_id);
+            _showBrowserNotification(data);
+          }
+
+          // Refresh sidebar preview regardless
+          if (onChatPage) loadChatPage();
+        };
+        ws.onclose = () => {
+          _globalInboxWs = null;
+          if (_globalInboxReconnectTimer) return;
+          _globalInboxReconnectTimer = setTimeout(connectGlobalInboxWs, 4000);
+        };
+        ws.onerror = () => ws.close();
+      }
+
+      function disconnectGlobalInboxWs() {
+        clearTimeout(_globalInboxReconnectTimer);
+        _globalInboxReconnectTimer = null;
+        if (_globalInboxWs) {
+          _globalInboxWs.onclose = null; // prevent auto-reconnect
+          _globalInboxWs.close();
+          _globalInboxWs = null;
+        }
+      }
+
+      function _updateNavChatBadge() {
+        const total = Object.values(_unreadCounts).reduce((s, n) => s + n, 0);
+        const badge = document.getElementById("nav-chat-badge");
+        if (!badge) return;
+        if (total > 0) {
+          badge.textContent = total > 99 ? "99+" : total;
+          badge.style.display = "inline-flex";
+        } else {
+          badge.style.display = "none";
+        }
+      }
+
+      function _updateConvItemBadge(orderId) {
+        const el = document.getElementById("inbox-conv-" + orderId);
+        if (!el) return;
+        const count = _unreadCounts[orderId] || 0;
+        let badge = el.querySelector(".chat-conv-unread");
+        if (count > 0) {
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "chat-conv-unread";
+            el.querySelector(".chat-conv-order")?.appendChild(badge);
+          }
+          badge.textContent = count > 99 ? "99+" : count;
+        } else if (badge) {
+          badge.remove();
+        }
+      }
+
+      async function _showBrowserNotification(data) {
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "default") {
+          await Notification.requestPermission().catch(() => {});
+        }
+        if (Notification.permission !== "granted") return;
+        const n = new Notification("💬 Tin nhắn mới", {
+          body: `Đơn #${data.order_id}: ${(data.content || "[ảnh]").slice(0, 80)}`,
+          icon: "/favicon.ico",
+          tag: "order-" + data.order_id,
+          renotify: true,
+        });
+        n.onclick = () => {
+          window.focus();
+          showPage("chat");
+          selectInboxConv(data.order_id);
+        };
+      }
+
+      function _clearOrderUnread(orderId) {
+        if (_unreadCounts[orderId]) {
+          delete _unreadCounts[orderId];
+          _updateNavChatBadge();
+          _updateConvItemBadge(orderId);
+        }
+      }
+
       function _startInboxPoll() {
         _stopInboxPoll();
         _inboxPollTimer = setInterval(async () => {
@@ -3423,6 +3571,7 @@
 
       function selectInboxConv(orderId) {
         _inboxOrderId = orderId;
+        _clearOrderUnread(orderId);
         document
           .querySelectorAll(".chat-conv-item")
           .forEach((el) => el.classList.remove("active"));

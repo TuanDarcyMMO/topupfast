@@ -120,6 +120,8 @@ class WebhookServer:
         self.app = aiohttp.web.Application()
         # order_id → set of active WebSocket connections from dashboard
         self._chat_connections: dict[int, set[aiohttp.web.WebSocketResponse]] = {}
+        # global inbox connections (one per logged-in staff browser tab)
+        self._inbox_connections: set[aiohttp.web.WebSocketResponse] = set()
 
         self.app.router.add_get("/health", self._health)
         self.app.router.add_post("/webhook/sepay", self._sepay)
@@ -159,6 +161,7 @@ class WebhookServer:
         self.app.router.add_delete("/api/packages/{id}",             self._api_packages_delete)
         # Chat WebSocket + history + inbox
         self.app.router.add_get("/ws/chat",                          self._ws_chat)
+        self.app.router.add_get("/ws/inbox",                         self._ws_inbox)
         self.app.router.add_get("/api/orders/{id}/chat",             self._api_chat_history)
         self.app.router.add_get("/api/chats",                        self._api_chats)
         self.app.router.add_get("/dashboard", self._dashboard_html)
@@ -1285,6 +1288,32 @@ class WebhookServer:
 
         return ws
 
+    async def _ws_inbox(self, request: aiohttp.web.Request) -> aiohttp.web.WebSocketResponse:
+        """
+        Global inbox WebSocket: GET /ws/inbox
+
+        Stays connected as long as the staff browser tab is open.
+        Server pushes {"type": "new_message", "order_id": ..., "sender": ...,
+                        "content": ..., "time": ...} whenever any customer sends a message.
+        """
+        token = request.rel_url.query.get("token", "") or request.cookies.get("session_token", "")
+        sess = _SESSIONS.get(token)
+        if not sess or sess["expires"] <= time.time():
+            raise aiohttp.web.HTTPUnauthorized(reason="Invalid or expired session")
+
+        ws = aiohttp.web.WebSocketResponse(heartbeat=30)
+        await ws.prepare(request)
+        self._inbox_connections.add(ws)
+        logger.info(f"Inbox WS connected: staff={sess['username']}")
+        try:
+            async for msg in ws:
+                if msg.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.ERROR):
+                    break
+        finally:
+            self._inbox_connections.discard(ws)
+            logger.info(f"Inbox WS disconnected: staff={sess['username']}")
+        return ws
+
     async def _api_chat_history(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
         """GET /api/orders/{id}/chat — REST fallback to load chat history."""
         sess, err = await _check_any(request)
@@ -1368,6 +1397,24 @@ class WebhookServer:
             content=content,
         )
         await self._broadcast_chat(order_id, saved)
+
+        # Notify all staff watching the global inbox
+        if self._inbox_connections:
+            anon_sender = _anon_name(discord_id) if discord_id else "Guest"
+            inbox_event = json.dumps({
+                "type": "new_message",
+                "order_id": order_id,
+                "sender": anon_sender,
+                "content": content,
+                "time": saved.get("created_at", ""),
+            })
+            dead: set[aiohttp.web.WebSocketResponse] = set()
+            for ws in list(self._inbox_connections):
+                try:
+                    await ws.send_str(inbox_event)
+                except Exception:
+                    dead.add(ws)
+            self._inbox_connections -= dead
 
     # -------------------------------------------------------------- start --
         # Custom access log format: hide User-Agent, only show method/path/status/size
