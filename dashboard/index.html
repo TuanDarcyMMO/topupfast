@@ -6,7 +6,10 @@
     <title>TopUpFast Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
     <style>
       :root {
@@ -23,7 +26,8 @@
         --yellow: #f59e0b;
         --red: #ef4444;
         --blue: #3b82f6;
-        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --card-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
         --radius: 8px;
       }
       [data-theme="dark"] {
@@ -36,7 +40,8 @@
         --accent: #38bdf8;
         --accent-hover: #0ea5e9;
         --accent-muted: #0c2d3f;
-        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+        --card-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
       }
       * {
         box-sizing: border-box;
@@ -44,7 +49,11 @@
         padding: 0;
       }
       body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
         background: var(--bg);
         color: var(--text);
         min-height: 100vh;
@@ -382,79 +391,86 @@
         font-size: 0.75rem;
         font-weight: 700;
       }
+      /* pending = amber */
       .badge-pending {
         background: #fef3c7;
         color: #92400e;
       }
+      /* delivering = sky-blue */
       .badge-delivering {
-        background: #dbeafe;
-        color: #1e40af;
+        background: #e0f2fe;
+        color: #0369a1;
       }
+      /* completed = emerald */
       .badge-completed {
-        background: #dcfce7;
-        color: #166534;
+        background: #d1fae5;
+        color: #065f46;
       }
+      /* failed = red */
       .badge-failed {
         background: #fee2e2;
         color: #991b1b;
       }
+      /* refunded = violet */
       .badge-refunded {
-        background: #fef9c3;
-        color: #854d0e;
-      }
-      .badge-refund_requested {
-        background: #fef3c7;
-        color: #92400e;
-        border: 1px solid #f59e0b;
-      }
-      .badge-rejected {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-      .badge-admin {
         background: #ede9fe;
         color: #5b21b6;
       }
+      /* refund_requested = orange */
+      .badge-refund_requested {
+        background: #ffedd5;
+        color: #9a3412;
+        border: 1px solid #f97316;
+      }
+      /* rejected = rose-pink */
+      .badge-rejected {
+        background: #fce7f3;
+        color: #9d174d;
+      }
+      .badge-admin {
+        background: #fef9c3;
+        color: #713f12;
+      }
       .badge-staff {
-        background: #e0f2fe;
-        color: #075985;
+        background: #dbeafe;
+        color: #1e40af;
       }
       [data-theme="dark"] .badge-pending {
-        background: #422006;
+        background: #451a03;
         color: #fcd34d;
       }
       [data-theme="dark"] .badge-delivering {
-        background: #1e3a5f;
-        color: #93c5fd;
+        background: #0c4a6e;
+        color: #7dd3fc;
       }
       [data-theme="dark"] .badge-completed {
-        background: #14532d;
-        color: #86efac;
+        background: #064e3b;
+        color: #6ee7b7;
       }
       [data-theme="dark"] .badge-failed {
         background: #450a0a;
         color: #fca5a5;
       }
-      [data-theme="dark"] .badge-rejected {
-        background: #450a0a;
-        color: #fca5a5;
-      }
       [data-theme="dark"] .badge-refunded {
-        background: #422006;
-        color: #fde68a;
-      }
-      [data-theme="dark"] .badge-refund_requested {
-        background: #451a03;
-        color: #fcd34d;
-        border-color: #d97706;
-      }
-      [data-theme="dark"] .badge-admin {
         background: #2e1065;
         color: #c4b5fd;
       }
+      [data-theme="dark"] .badge-refund_requested {
+        background: #431407;
+        color: #fb923c;
+        border-color: #ea580c;
+      }
+      [data-theme="dark"] .badge-rejected {
+        background: #4c0519;
+        color: #fda4af;
+      }
+      [data-theme="dark"] .badge-admin {
+        background: #422006;
+        color: #fde68a;
+      }
       [data-theme="dark"] .badge-staff {
-        background: #0c4a6e;
-        color: #7dd3fc;
+        background: #1e3a5f;
+        color: #93c5fd;
       }
 
       /* ── Modal ────────────────────────────────────── */
@@ -516,7 +532,9 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        transition: color 0.12s, background 0.12s;
+        transition:
+          color 0.12s,
+          background 0.12s;
       }
       .theme-toggle:hover {
         color: var(--text);
@@ -908,7 +926,9 @@
     <!-- ═══════════════════ LOGIN ═══════════════════ -->
     <div id="auth-screen">
       <div class="auth-card">
-        <div class="auth-brand"><span class="auth-brand-accent">TopUp</span>Fast</div>
+        <div class="auth-brand">
+          <span class="auth-brand-accent">TopUp</span>Fast
+        </div>
         <p>Staff Dashboard — Sign in to continue</p>
         <div class="form-group">
           <label>Username</label>
@@ -942,9 +962,21 @@
       <!-- Sidebar -->
       <nav class="sidebar">
         <div class="sidebar-logo">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="22" height="22" rx="6" fill="var(--accent)"/>
-            <path d="M6 11h10M11 6l5 5-5 5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="22" height="22" rx="6" fill="var(--accent)" />
+            <path
+              d="M6 11h10M11 6l5 5-5 5"
+              stroke="#fff"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <span><span class="sidebar-logo-mark">TopUp</span>Fast</span>
         </div>
@@ -1118,8 +1150,8 @@
                 </button>
               </div>
               <button class="btn btn-primary btn-sm" onclick="loadMyOrders()">
-              <i class="ph ph-arrow-clockwise"></i> Refresh
-            </button>
+                <i class="ph ph-arrow-clockwise"></i> Refresh
+              </button>
             </div>
             <div id="my-orders-table-wrap">
               <div class="empty-state">Loading...</div>
@@ -1193,8 +1225,8 @@
             <div class="table-header">
               <h2>Tài khoản ngân hàng</h2>
               <button class="btn btn-primary btn-sm" onclick="openAddBank()">
-              <i class="ph ph-plus"></i> Thêm STK
-            </button>
+                <i class="ph ph-plus"></i> Thêm STK
+              </button>
             </div>
             <div id="bank-accounts-wrap">
               <div class="empty-state">Loading...</div>
@@ -1280,8 +1312,8 @@
                 "
               ></div>
               <button class="btn btn-success" onclick="submitWithdraw()">
-              <i class="ph ph-wallet"></i> Rút tiền
-            </button>
+                <i class="ph ph-wallet"></i> Rút tiền
+              </button>
             </div>
             <div id="my-withdrawals-wrap">
               <div class="empty-state">Chưa có yêu cầu rút tiền.</div>
@@ -1406,15 +1438,15 @@
                 <option value="failed">Failed</option>
               </select>
               <button class="btn btn-primary btn-sm" onclick="runOrderSearch()">
-              <i class="ph ph-magnifying-glass"></i> Tìm
-            </button>
-            <button
-              class="btn btn-sm"
-              style="background: var(--surface2); color: var(--text)"
-              onclick="exportOrdersCSV()"
-            >
-              <i class="ph ph-download-simple"></i> Xuất CSV
-            </button>
+                <i class="ph ph-magnifying-glass"></i> Tìm
+              </button>
+              <button
+                class="btn btn-sm"
+                style="background: var(--surface2); color: var(--text)"
+                onclick="exportOrdersCSV()"
+              >
+                <i class="ph ph-download-simple"></i> Xuất CSV
+              </button>
             </div>
             <div id="search-results-wrap">
               <div class="empty-state">Nhập điều kiện và bấm Tìm.</div>
@@ -1428,9 +1460,12 @@
           <div class="table-wrap" style="margin-bottom: 20px">
             <div class="table-header">
               <h2>Danh sách Game</h2>
-              <button class="btn btn-primary btn-sm" onclick="openAddGameModal()">
-              <i class="ph ph-plus"></i> Thêm Game
-            </button>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddGameModal()"
+              >
+                <i class="ph ph-plus"></i> Thêm Game
+              </button>
             </div>
             <div id="games-list-wrap">
               <div class="empty-state">Đang tải...</div>
@@ -1445,9 +1480,12 @@
                   style="color: var(--primary)"
                 ></span>
               </h2>
-              <button class="btn btn-primary btn-sm" onclick="openAddPackageModal()">
-              <i class="ph ph-plus"></i> Thêm Gói
-            </button>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="openAddPackageModal()"
+              >
+                <i class="ph ph-plus"></i> Thêm Gói
+              </button>
               <button
                 class="btn btn-sm"
                 onclick="closePackagesSection()"
@@ -1469,9 +1507,13 @@
             <div class="chat-inbox-list">
               <div class="chat-inbox-list-header">
                 Cuộc trò chuyện
-                <button class="btn btn-sm btn-primary" onclick="loadChatPage()" style="font-size: 0.75rem; padding: 3px 9px">
-                <i class="ph ph-arrow-clockwise"></i>
-              </button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  onclick="loadChatPage()"
+                  style="font-size: 0.75rem; padding: 3px 9px"
+                >
+                  <i class="ph ph-arrow-clockwise"></i>
+                </button>
               </div>
               <div id="inbox-conv-list" style="overflow-y: auto; flex: 1">
                 <div class="empty-state" style="padding: 30px">Loading...</div>
@@ -1957,9 +1999,7 @@
           >
             Huỷ
           </button>
-          <button class="btn btn-success" onclick="submitAddBank()">
-            Lưu
-          </button>
+          <button class="btn btn-success" onclick="submitAddBank()">Lưu</button>
         </div>
       </div>
     </div>
@@ -2085,9 +2125,7 @@
     <div class="modal-bg" id="deny-refund-modal">
       <div class="modal">
         <h3>
-          Từ chối hoàn tiền Đơn #<span
-            id="deny-refund-modal-order-id"
-          ></span>
+          Từ chối hoàn tiền Đơn #<span id="deny-refund-modal-order-id"></span>
         </h3>
         <label
           style="
@@ -2242,7 +2280,8 @@
         document.documentElement.setAttribute("data-theme", saved);
         window.addEventListener("DOMContentLoaded", () => {
           const icon = document.getElementById("theme-icon");
-          if (icon) icon.className = saved === "dark" ? "ph ph-moon" : "ph ph-sun";
+          if (icon)
+            icon.className = saved === "dark" ? "ph ph-moon" : "ph ph-sun";
         });
       }
       function toggleTheme() {
