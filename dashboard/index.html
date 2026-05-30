@@ -689,6 +689,21 @@
         margin-bottom: 6px;
       }
 
+      /* Inline images sent from Discord */
+      .chat-img {
+        max-width: 220px;
+        max-height: 180px;
+        border-radius: 8px;
+        margin-top: 5px;
+        display: block;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        transition: opacity 0.15s;
+      }
+      .chat-img:hover {
+        opacity: 0.88;
+      }
+
       /* ── Chat Inbox Tab ───────────────────────────────────────────── */
       .chat-inbox-layout {
         display: flex;
@@ -955,7 +970,7 @@
           style="display: none"
         >
           <span class="icon">💬</span> Chats
-          <span id="nav-chat-badge" style="display:none"></span>
+          <span id="nav-chat-badge" style="display: none"></span>
         </div>
         <div class="sidebar-bottom">
           <button class="theme-toggle" onclick="toggleTheme()">
@@ -2095,6 +2110,26 @@
       </div>
     </div>
 
+    <!-- ── Staff violations modal ── -->
+    <div class="modal-bg" id="violations-modal">
+      <div class="modal" style="max-width: 700px; width: 95%">
+        <h3 id="violations-modal-title">📋 Lịch sử vi phạm</h3>
+        <div
+          id="violations-modal-body"
+          style="max-height: 420px; overflow-y: auto"
+        ></div>
+        <div class="modal-actions">
+          <button
+            class="btn"
+            style="background: var(--surface2); color: var(--text)"
+            onclick="closeViolationsModal()"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Complete modal ── -->
     <div class="modal-bg" id="complete-modal">
       <div class="modal">
@@ -2592,13 +2627,21 @@
         const wrap = document.getElementById("staff-table-wrap");
         wrap.innerHTML = '<div class="empty-state">Loading...</div>';
         try {
-          const list = (await api("GET", "/api/staff")) || [];
-          if (!list.length) {
+          const [list, allViolations] = await Promise.all([
+            api("GET", "/api/staff"),
+            api("GET", "/api/staff/violations?limit=200").catch(() => []),
+          ]);
+          const violCount = {};
+          (allViolations || []).forEach((v) => {
+            violCount[v.staff_discord_id] =
+              (violCount[v.staff_discord_id] || 0) + 1;
+          });
+          if (!list || !list.length) {
             wrap.innerHTML = '<div class="empty-state">No staff found.</div>';
             return;
           }
           wrap.innerHTML = `<table>
-      <thead><tr><th>Username</th><th>Discord ID</th><th>Role</th><th>Active</th><th>Created</th></tr></thead>
+      <thead><tr><th>Username</th><th>Discord ID</th><th>Role</th><th>Active</th><th>Vi phạm</th><th>Created</th></tr></thead>
       <tbody>${list
         .map(
           (s) => `<tr>
@@ -2606,6 +2649,11 @@
         <td><code style="font-size:0.8rem">${s.discord_id}</code></td>
         <td><span class="badge badge-${s.role}">${s.role}</span></td>
         <td>${s.active ? "✅" : "❌"}</td>
+        <td>${
+          (violCount[s.discord_id] || 0) > 0
+            ? `<button class="btn btn-sm" onclick="openViolationsModal('${s.discord_id}','${s.username}')" style="background:var(--danger);color:#fff;gap:4px">⚠️ ${violCount[s.discord_id]}</button>`
+            : '<span style="color:var(--text2)">—</span>'
+        }</td>
         <td style="color:var(--text2);font-size:0.8rem">${fmtDate(s.created_at)}</td>
       </tr>`,
         )
@@ -2613,6 +2661,45 @@
         } catch (e) {
           wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
         }
+      }
+
+      async function openViolationsModal(discordId, username) {
+        document.getElementById("violations-modal-title").textContent =
+          `📋 Lịch sử vi phạm — ${username}`;
+        document.getElementById("violations-modal-body").innerHTML =
+          '<div class="empty-state">Đang tải...</div>';
+        document.getElementById("violations-modal").classList.add("open");
+        try {
+          const rows =
+            (await api(
+              "GET",
+              `/api/staff/violations?discord_id=${encodeURIComponent(discordId)}&limit=50`,
+            )) || [];
+          if (!rows.length) {
+            document.getElementById("violations-modal-body").innerHTML =
+              '<div class="empty-state">Không có vi phạm nào.</div>';
+            return;
+          }
+          document.getElementById("violations-modal-body").innerHTML = `<table>
+<thead><tr><th>#Đơn</th><th>Lý do</th><th>Nội dung</th><th>Thời gian</th></tr></thead>
+<tbody>${rows
+            .map(
+              (v) => `<tr>
+  <td>${v.order_id ? `#${v.order_id}` : "—"}</td>
+  <td style="color:var(--danger);font-size:0.85rem">${escHtml(v.reason)}</td>
+  <td style="font-size:0.8rem;color:var(--text2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(v.content)}">${escHtml(v.content)}</td>
+  <td style="color:var(--text2);font-size:0.8rem;white-space:nowrap">${fmtDate(v.created_at)}</td>
+</tr>`,
+            )
+            .join("")}</tbody></table>`;
+        } catch (e) {
+          document.getElementById("violations-modal-body").innerHTML =
+            `<div class="empty-state">Lỗi: ${e.message}</div>`;
+        }
+      }
+
+      function closeViolationsModal() {
+        document.getElementById("violations-modal").classList.remove("open");
       }
 
       // ── Helpers ────────────────────────────────────────────────────────────────
@@ -3376,14 +3463,15 @@
       let _unreadCounts = {}; // order_id → unread count
 
       function connectGlobalInboxWs() {
-        if (_globalInboxWs && _globalInboxWs.readyState === WebSocket.OPEN) return;
+        if (_globalInboxWs && _globalInboxWs.readyState === WebSocket.OPEN)
+          return;
         const tokenCookie = document.cookie
           .split(";")
           .find((c) => c.trim().startsWith("session_token="));
         const token = tokenCookie ? tokenCookie.split("=")[1].trim() : "";
         const proto = location.protocol === "https:" ? "wss:" : "ws:";
         const ws = new WebSocket(
-          `${proto}//${location.host}/ws/inbox?token=${token}`
+          `${proto}//${location.host}/ws/inbox?token=${token}`,
         );
         _globalInboxWs = ws;
         ws.onopen = () => {
@@ -3392,17 +3480,24 @@
         };
         ws.onmessage = (evt) => {
           let data;
-          try { data = JSON.parse(evt.data); } catch { return; }
+          try {
+            data = JSON.parse(evt.data);
+          } catch {
+            return;
+          }
           if (data.type !== "new_message") return;
 
-          const onChatPage = document.getElementById("page-chat")?.classList.contains("active");
+          const onChatPage = document
+            .getElementById("page-chat")
+            ?.classList.contains("active");
           const isCurrentOrder = _inboxOrderId === data.order_id;
 
           if (onChatPage && isCurrentOrder) {
             // Panel already open — scroll update handled by per-order WS
           } else {
             // Increment unread badge
-            _unreadCounts[data.order_id] = (_unreadCounts[data.order_id] || 0) + 1;
+            _unreadCounts[data.order_id] =
+              (_unreadCounts[data.order_id] || 0) + 1;
             _updateNavChatBadge();
             _updateConvItemBadge(data.order_id);
             _showBrowserNotification(data);
@@ -3541,9 +3636,16 @@
         wrap.innerHTML = convs
           .map((c) => {
             const o = c.order || {};
-            const preview = c.last_message
-              ? escHtml(c.last_message.substring(0, 55))
-              : "—";
+            // Strip encoded image URLs before showing preview
+            const rawMsg = (c.last_message || "")
+              .replace(/\n__IMGS__:[\s\S]*$/, "")
+              .trim();
+            const hasImg = (c.last_message || "").includes("\n__IMGS__:");
+            const preview = rawMsg
+              ? escHtml(rawMsg.substring(0, 55))
+              : hasImg
+                ? "[🖼️ ảnh]"
+                : "—";
             const time = c.last_at
               ? new Date(c.last_at).toLocaleTimeString("vi-VN", {
                   hour: "2-digit",
@@ -3666,9 +3768,31 @@
               : t === "system"
                 ? ""
                 : "👥 " + name;
+
+        // Parse image URLs encoded as "\n__IMGS__:url1||url2"
+        let textContent = msg.content || "";
+        let imgUrls = [];
+        const imgSep = textContent.indexOf("\n__IMGS__:");
+        if (imgSep !== -1) {
+          imgUrls = textContent
+            .slice(imgSep + 10)
+            .split("||")
+            .filter(Boolean);
+          textContent = textContent.slice(0, imgSep).trim();
+        }
+        const imgHtml = imgUrls
+          .map(
+            (u) =>
+              `<a href="${u}" target="_blank" rel="noopener noreferrer">` +
+              `<img class="chat-img" src="${u}" loading="lazy" /></a>`,
+          )
+          .join("");
+
         if (t !== "system")
-          div.innerHTML = `<div class="chat-meta">${escHtml(label)} &middot; ${time}</div><div>${escHtml(msg.content)}</div>`;
-        else div.innerHTML = `<div>${escHtml(msg.content)}</div>`;
+          div.innerHTML =
+            `<div class="chat-meta">${escHtml(label)} &middot; ${time}</div>` +
+            `<div>${escHtml(textContent)}${imgHtml}</div>`;
+        else div.innerHTML = `<div>${escHtml(textContent)}${imgHtml}</div>`;
         wrap.appendChild(div);
       }
 

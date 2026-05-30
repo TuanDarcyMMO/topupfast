@@ -402,7 +402,8 @@ class AdminCog(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         """
         Lắng nghe tin nhắn trong ticket channel (category "📋 Đơn Nạp").
-        Nếu người gửi là khách (không phải bot), relay sang WebSocket dashboard.
+        - Nhân viên nhắn trực tiếp qua Discord → kiểm tra vi phạm, xóa + cảnh báo nếu cần.
+        - Khách hàng nhắn → relay dashboard + AI tự động trả lời.
         """
         # Bỏ qua tin của bot
         if message.author.bot:
@@ -423,27 +424,102 @@ class AdminCog(commands.Cog):
         ]
         if not content and not image_urls:
             return
-        relay_content = content or f"[Đã gửi {len(image_urls)} ảnh]"
 
-        # Tìm đơn hàng gắn với ticket channel này
         try:
             import services.database as _db
             from services.ai_bot import get_ai_reply
+            from services.chat_guard import check_staff_message
 
             order = await _db.get_order_by_ticket_channel(str(message.channel.id))
             if not order:
                 return
 
-            # Relay sang WebhookServer nếu đã được gắn trên bot
             webhook_server = getattr(self.bot, "_webhook_server", None)
             if webhook_server is None:
                 return
+
+            # ── Phân biệt nhân viên vs khách hàng ─────────────────────────
+            staff_member = await _db.get_staff_by_discord(str(message.author.id))
+            is_staff = staff_member is not None
+
+            if is_staff:
+                # Nhân viên nhắn trực tiếp trong Discord — kiểm tra vi phạm
+                if content:
+                    is_violation, reason = check_staff_message(content)
+                    if is_violation:
+                        # 1. Xóa tin nhắn vi phạm
+                        try:
+                            await message.delete()
+                        except Exception:
+                            pass
+
+                        # 2. Gửi cảnh báo trong Discord channel
+                        warn_embed = discord.Embed(
+                            description=(
+                                f"⛔ **Vi phạm quy tắc hỗ trợ khách hàng**\n"
+                                f"**Lý do:** {reason}\n"
+                                f"**Nội dung bị chặn:** {content[:200]}"
+                            ),
+                            color=discord.Color.red(),
+                        )
+                        warn_embed.set_author(name=f"🚫 {message.author.display_name}")
+                        warn_embed.set_footer(text="Tin nhắn đã bị xóa tự động. Vui lòng hỗ trợ qua dashboard.")
+                        try:
+                            await message.channel.send(embed=warn_embed, delete_after=30)
+                        except Exception:
+                            pass
+
+                        # 3. Lưu lịch sử vi phạm vào DB
+                        try:
+                            await _db.save_staff_violation(
+                                staff_discord_id=str(message.author.id),
+                                staff_username=staff_member["username"],
+                                order_id=order["id"],
+                                content=content,
+                                reason=reason,
+                            )
+                        except Exception:
+                            logger.warning("Không thể lưu staff_violation", exc_info=True)
+
+                        # 4. Thông báo dashboard qua system message
+                        import datetime as _dt
+                        await webhook_server._broadcast_chat(order["id"], {
+                            "type": "message",
+                            "id": None,
+                            "order_id": order["id"],
+                            "sender_type": "system",
+                            "sender_id": "system",
+                            "sender_name": "Hệ Thống",
+                            "content": (
+                                f"⛔ Tin nhắn của nhân viên **{staff_member['username']}** "
+                                f"bị xóa vì vi phạm: {reason}"
+                            ),
+                            "created_at": _dt.datetime.utcnow().isoformat() + "Z",
+                        })
+                        return  # Không relay tin nhắn vi phạm
+
+                # Nhân viên gửi tin hợp lệ → relay lên dashboard dưới sender_type="staff"
+                relay_content = content or f"[Đã gửi {len(image_urls)} ảnh]"
+                await webhook_server.broadcast_discord_message(
+                    order_id=order["id"],
+                    discord_id=str(message.author.id),
+                    display_name=message.author.display_name,
+                    content=relay_content,
+                    sender_type="staff",
+                    image_urls=image_urls or None,
+                )
+                return  # Không chạy AI cho tin của nhân viên
+
+            # ── Khách hàng nhắn tin ────────────────────────────────────────
+            relay_content = content or f"[Đã gửi {len(image_urls)} ảnh]"
 
             await webhook_server.broadcast_discord_message(
                 order_id=order["id"],
                 discord_id=str(message.author.id),
                 display_name=message.author.display_name,
                 content=relay_content,
+                sender_type="customer",
+                image_urls=image_urls or None,
             )
 
             # ── Gọi AI tự động trả lời ──────────────────────────────────────
@@ -472,7 +548,6 @@ class AdminCog(commands.Cog):
                     content=ai_reply,
                 )
                 if webhook_server:
-                    import time as _time
                     await webhook_server._broadcast_chat(order["id"], {
                         "type": "message",
                         "id": None,

@@ -564,8 +564,15 @@ async def save_chat_message(
     content: str,
     blocked: bool = False,
     block_reason: str = "",
+    image_urls: list[str] | None = None,
 ) -> dict:
-    """Lưu tin nhắn vào bảng chat_messages."""
+    """Lưu tin nhắn vào bảng chat_messages.
+
+    image_urls được encode vào cuối content dưới dạng ``\\n__IMGS__:url1||url2``
+    để tránh cần thêm cột DB. Dashboard sẽ parse và render ảnh.
+    """
+    if image_urls:
+        content = content + "\n__IMGS__:" + "||".join(image_urls)
     return await _post("chat_messages", {
         "order_id": order_id,
         "sender_type": sender_type,
@@ -595,6 +602,33 @@ async def get_order_by_ticket_channel(channel_id: str) -> dict | None:
         "limit": "1",
     })
     return rows[0] if rows else None
+
+
+# ============================================================ Staff violations ==
+
+async def save_staff_violation(
+    staff_discord_id: str,
+    staff_username: str,
+    order_id: int | None,
+    content: str,
+    reason: str,
+) -> dict:
+    """Ghi lại một vi phạm chat của nhân viên."""
+    return await _post("staff_violations", {
+        "staff_discord_id": staff_discord_id,
+        "staff_username": staff_username,
+        "order_id": order_id,
+        "content": content,
+        "reason": reason,
+    })
+
+
+async def get_staff_violations(discord_id: str | None = None, limit: int = 50) -> list:
+    """Lấy lịch sử vi phạm. Nếu discord_id=None → lấy tất cả."""
+    params: dict = {"order": "created_at.desc", "limit": str(limit)}
+    if discord_id:
+        params["staff_discord_id"] = f"eq.{discord_id}"
+    return await _get("staff_violations", params)
 
 
 async def get_chat_inbox(limit: int = 50) -> list:

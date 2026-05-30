@@ -138,6 +138,7 @@ class WebhookServer:
         self.app.router.add_post("/api/orders/{id}/deny-refund",     self._api_deny_refund)
         self.app.router.add_get("/api/stats",                        self._api_stats)
         self.app.router.add_get("/api/staff",                   self._api_staff_list)        # Staff commission & bank accounts
+        self.app.router.add_get("/api/staff/violations",            self._api_staff_violations)
         self.app.router.add_get("/api/staff/balance",                self._api_staff_balance)
         self.app.router.add_get("/api/staff/bank-accounts",          self._api_bank_accounts_list)
         self.app.router.add_post("/api/staff/bank-accounts",         self._api_bank_accounts_add)
@@ -818,6 +819,20 @@ class WebhookServer:
         ]
         return aiohttp.web.json_response(safe)
 
+    async def _api_staff_violations(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
+        """GET /api/staff/violations[?discord_id=...&limit=50] — (admin only)"""
+        sess, err = await _check_admin(request)
+        if err:
+            return err
+        discord_id = request.rel_url.query.get("discord_id") or None
+        limit = min(int(request.rel_url.query.get("limit", "50")), 200)
+        try:
+            rows = await db.get_staff_violations(discord_id=discord_id, limit=limit)
+        except Exception:
+            logger.warning("get_staff_violations failed (table may not exist)", exc_info=True)
+            rows = []
+        return aiohttp.web.json_response(rows)
+
     # ── Staff balance ─────────────────────────────────────────────────────────
 
     async def _api_staff_balance(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -1384,22 +1399,25 @@ class WebhookServer:
         discord_id: str,
         display_name: str,
         content: str,
+        sender_type: str = "customer",
+        image_urls: list[str] | None = None,
     ) -> None:
         """
-        Được gọi bởi AdminCog khi khách gửi tin nhắn trong ticket Discord.
+        Được gọi bởi AdminCog khi có tin nhắn trong ticket Discord.
         Lưu vào DB và broadcast tới tất cả dashboard WS client.
         """
         saved = await db.save_chat_message(
             order_id=order_id,
-            sender_type="customer",
+            sender_type=sender_type,
             sender_id=discord_id,
             sender_name=display_name,
             content=content,
+            image_urls=image_urls,
         )
         await self._broadcast_chat(order_id, saved)
 
-        # Notify all staff watching the global inbox
-        if self._inbox_connections:
+        # Only push to global inbox when a customer sends a message
+        if sender_type == "customer" and self._inbox_connections:
             anon_sender = _anon_name(discord_id) if discord_id else "Guest"
             inbox_event = json.dumps({
                 "type": "new_message",
