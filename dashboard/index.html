@@ -2227,8 +2227,10 @@
         if (name === "withdraw") loadWithdrawPage();
         if (name === "withdrawals-admin") loadWithdrawals();
         if (name === "games") loadGames();
-        if (name === "chat") { loadChatPage(); _startInboxPoll(); }
-        else _stopInboxPoll();
+        if (name === "chat") {
+          loadChatPage();
+          _startInboxPoll();
+        } else _stopInboxPoll();
       }
 
       // ── Orders ─────────────────────────────────────────────────────────────────
@@ -3338,18 +3340,27 @@
       function _startInboxPoll() {
         _stopInboxPoll();
         _inboxPollTimer = setInterval(async () => {
-          if (document.getElementById("page-chat")?.classList.contains("active")) {
+          if (
+            document.getElementById("page-chat")?.classList.contains("active")
+          ) {
             try {
               const fresh = (await api("GET", "/api/chats")) || [];
-              const hasNew = JSON.stringify(fresh.map(c => c.last_at + c.order_id))
-                          !== JSON.stringify(_inboxConvs.map(c => c.last_at + c.order_id));
-              if (hasNew) { _inboxConvs = fresh; renderInboxList(fresh); }
+              const hasNew =
+                JSON.stringify(fresh.map((c) => c.last_at + c.order_id)) !==
+                JSON.stringify(_inboxConvs.map((c) => c.last_at + c.order_id));
+              if (hasNew) {
+                _inboxConvs = fresh;
+                renderInboxList(fresh);
+              }
             } catch (_) {}
           }
         }, 15000);
       }
       function _stopInboxPoll() {
-        if (_inboxPollTimer) { clearInterval(_inboxPollTimer); _inboxPollTimer = null; }
+        if (_inboxPollTimer) {
+          clearInterval(_inboxPollTimer);
+          _inboxPollTimer = null;
+        }
       }
 
       async function loadChatPage() {

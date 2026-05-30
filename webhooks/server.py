@@ -537,12 +537,22 @@ class WebhookServer:
         except Exception:
             logger.exception("Could not DM user for refund")
 
-        # Notify ticket channel
-        if locale == "vi":
-            ticket_msg = f"💰 **Đơn #{order['id']} đã được hoàn tiền** bởi `{staff_name}`" + (f"\n📝 {note}" if note else "")
-        else:
-            ticket_msg = f"💰 **Order #{order['id']} refunded** by `{staff_name}`" + (f"\n📝 {note}" if note else "")
-        asyncio.create_task(self._notify_ticket(order, ticket_msg, discord.Color.gold()))
+        # Close ticket if exists, otherwise DM already handled above
+        ch_id = order.get("ticket_channel_id")
+        if ch_id:
+            try:
+                channel = self.bot.get_channel(int(ch_id))
+                if channel:
+                    if locale == "vi":
+                        close_msg = f"💰 Đơn **#{order['id']}** đã được hoàn tiền bởi `{staff_name}`. Ticket đang được đóng..." + (f"\n📝 {note}" if note else "")
+                    else:
+                        close_msg = f"💰 Order **#{order['id']}** refunded by `{staff_name}`. Closing ticket..." + (f"\n📝 {note}" if note else "")
+                    embed = discord.Embed(description=close_msg, color=discord.Color.gold())
+                    await channel.send(embed=embed)
+                    await asyncio.sleep(3)
+                    await channel.delete(reason=f"Order #{order['id']} refunded by {staff_name}")
+            except Exception:
+                logger.exception("Could not close ticket channel on refund")
 
     # ── Staff reject ──────────────────────────────────────────────────────────
 

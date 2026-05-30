@@ -45,7 +45,49 @@ def _package_embed(game, category, packages, balance, locale="en"):
 
 
 def _platform_label(platform: str) -> str:
-    return {"ios": "🍎 iOS", "android": "🤖 Android"}.get(platform.lower(), platform.capitalize())
+    return {
+        "ios":       "🍎 iOS",
+        "ios_clone": "🔄 iOS Clone iCloud",
+        "android":   "🤖 Android",
+        "facebook":  "📘 Facebook",
+    }.get(platform.lower(), platform.capitalize())
+
+
+def _ios_method_embed(game: dict, package: dict) -> discord.Embed:
+    embed = discord.Embed(
+        title=f"{game['emoji']} {game['name']} — 🍎 Chọn phương thức iOS",
+        description=(
+            f"📦 **{package['name']}** — `${package['price_usd']:.2f}`\n\n"
+            "Chọn cách bạn muốn nạp cho iOS:"
+        ),
+        color=discord.Color.blurple(),
+    )
+    if game.get("icon_url"):
+        embed.set_thumbnail(url=game["icon_url"])
+    return embed
+
+
+def _clone_icloud_guide_embed(game: dict, package: dict) -> discord.Embed:
+    embed = discord.Embed(
+        title="🔄 Hướng dẫn Clone iCloud",
+        description=(
+            f"📦 **{package['name']}** — `${package['price_usd']:.2f}`\n\n"
+            "**Thực hiện từng bước sau trên iPhone của bạn:**\n\n"
+            "1️⃣ Tạo Apple ID mới tại appleid.apple.com hoặc trên iPhone: "
+            "*Settings → tên bạn → Create Apple ID*\n\n"
+            "2️⃣ Vào **Settings → App Store** → nhấn tên tài khoản → **Sign Out**\n\n"
+            "3️⃣ Đăng nhập App Store bằng Apple ID mới *(CHỈ App Store, KHÔNG phải iCloud chính)*\n\n"
+            "4️⃣ Mở game → khi game hỏi Game Center → đăng nhập bằng Apple ID mới → game lưu tiến trình ở đây\n\n"
+            "5️⃣ Bấm **✅ Tôi đã làm xong** bên dưới → nhập email + mật khẩu Apple ID mới\n\n"
+            "6️⃣ Nhân viên đăng nhập và nạp tiền *(cần bạn online để xác nhận OTP)*\n\n"
+            "7️⃣ Sau khi xong: Settings → App Store → Sign Out → đăng nhập lại Apple ID chính → mở game\n\n"
+            "⚠️ **KHÔNG đăng xuất iCloud chính** trong Settings → tên, CHỈ đăng xuất App Store"
+        ),
+        color=discord.Color.orange(),
+    )
+    if game.get("icon_url"):
+        embed.set_thumbnail(url=game["icon_url"])
+    return embed
 
 
 def _confirm_embed(game, package, game_account, platform, balance, locale="en"):
@@ -166,18 +208,29 @@ class PackageSelectView(discord.ui.View):
     async def _on_select(self, interaction):
         package_id = interaction.data["values"][0]
         package = await get_package(package_id)
-        embed = discord.Embed(
-            title=f"{self.game['emoji']} {self.game['name']} — 📱 Chọn nền tảng",
-            description=(
-                f"📦 **{package['name']}** — `${package['price_usd']:.2f}`\n\n"
-                f"Chọn nền tảng bạn muốn nạp:"
-            ),
-            color=discord.Color.blurple(),
-        )
-        if self.game.get("icon_url"):
-            embed.set_thumbnail(url=self.game["icon_url"])
-        view = PlatformSelectView(self.cog, self.game, self.category, package, self.user_balance, self.locale)
-        await interaction.response.edit_message(embed=embed, view=view)
+        pkg_platform = (package.get("platform") or self.game.get("platform") or "all").lower()
+
+        if pkg_platform == "ios":
+            embed = _ios_method_embed(self.game, package)
+            view = IOSMethodView(self.cog, self.game, self.category, package, self.user_balance, self.locale)
+            await interaction.response.edit_message(embed=embed, view=view)
+        elif pkg_platform == "android":
+            await interaction.response.send_modal(
+                CredentialModal(self.cog, self.game, package, "android", self.user_balance, self.locale)
+            )
+        else:
+            embed = discord.Embed(
+                title=f"{self.game['emoji']} {self.game['name']} — 📱 Chọn nền tảng",
+                description=(
+                    f"📦 **{package['name']}** — `${package['price_usd']:.2f}`\n\n"
+                    f"Chọn nền tảng bạn muốn nạp:"
+                ),
+                color=discord.Color.blurple(),
+            )
+            if self.game.get("icon_url"):
+                embed.set_thumbnail(url=self.game["icon_url"])
+            view = PlatformSelectView(self.cog, self.game, self.category, package, self.user_balance, self.locale)
+            await interaction.response.edit_message(embed=embed, view=view)
 
 
 class PlatformSelectView(discord.ui.View):
@@ -208,24 +261,36 @@ class PlatformSelectView(discord.ui.View):
             disabled=not android_ok,
             row=0,
         )
+        facebook_btn = discord.ui.Button(
+            label="📘 Facebook",
+            style=discord.ButtonStyle.primary,
+            row=0,
+        )
         back_btn = discord.ui.Button(label="◀ Back", style=discord.ButtonStyle.secondary, row=1)
 
         ios_btn.callback = self._on_ios
         android_btn.callback = self._on_android
+        facebook_btn.callback = self._on_facebook
         back_btn.callback = self._on_back
 
         self.add_item(ios_btn)
         self.add_item(android_btn)
+        self.add_item(facebook_btn)
         self.add_item(back_btn)
 
     async def _on_ios(self, interaction):
-        await interaction.response.send_modal(
-            CredentialModal(self.cog, self.game, self.package, "ios", self.user_balance, self.locale)
-        )
+        embed = _ios_method_embed(self.game, self.package)
+        view = IOSMethodView(self.cog, self.game, self.category, self.package, self.user_balance, self.locale)
+        await interaction.response.edit_message(embed=embed, view=view)
 
     async def _on_android(self, interaction):
         await interaction.response.send_modal(
             CredentialModal(self.cog, self.game, self.package, "android", self.user_balance, self.locale)
+        )
+
+    async def _on_facebook(self, interaction):
+        await interaction.response.send_modal(
+            CredentialModal(self.cog, self.game, self.package, "facebook", self.user_balance, self.locale)
         )
 
     async def _on_back(self, interaction):
@@ -237,17 +302,98 @@ class PlatformSelectView(discord.ui.View):
         )
 
 
+class IOSMethodView(discord.ui.View):
+    """Chọn phương thức iOS: iCloud/Game Center hoặc Clone iCloud."""
+
+    def __init__(self, cog, game, category, package, user_balance, locale="en"):
+        super().__init__(timeout=120)
+        self.cog = cog
+        self.game = game
+        self.category = category
+        self.package = package
+        self.user_balance = user_balance
+        self.locale = locale
+
+    @discord.ui.button(label="🍎 iOS — Nhập iCloud/Game Center ID", style=discord.ButtonStyle.primary, row=0)
+    async def ios_normal_btn(self, interaction, _):
+        await interaction.response.send_modal(
+            CredentialModal(self.cog, self.game, self.package, "ios", self.user_balance, self.locale)
+        )
+
+    @discord.ui.button(label="🔄 iOS — Clone iCloud (bảo mật)", style=discord.ButtonStyle.success, row=0)
+    async def ios_clone_btn(self, interaction, _):
+        embed = _clone_icloud_guide_embed(self.game, self.package)
+        view = CloneICloudGuideView(self.cog, self.game, self.category, self.package, self.user_balance, self.locale)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+    @discord.ui.button(label="◀ Back", style=discord.ButtonStyle.secondary, row=1)
+    async def back_btn(self, interaction, _):
+        pkgs = await get_packages(self.game["id"], self.category)
+        view = PackageSelectView(self.cog, self.game, self.category, pkgs, self.user_balance, self.locale)
+        await interaction.response.edit_message(
+            embed=_package_embed(self.game, self.category, pkgs, self.user_balance, self.locale),
+            view=view,
+        )
+
+
+class CloneICloudGuideView(discord.ui.View):
+    """View hiển thị hướng dẫn Clone iCloud trước khi nhập credentials."""
+
+    def __init__(self, cog, game, category, package, user_balance, locale="en"):
+        super().__init__(timeout=120)
+        self.cog = cog
+        self.game = game
+        self.category = category
+        self.package = package
+        self.user_balance = user_balance
+        self.locale = locale
+
+    @discord.ui.button(label="✅ Tôi đã làm xong, tiếp tục", style=discord.ButtonStyle.success, row=0)
+    async def done_btn(self, interaction, _):
+        await interaction.response.send_modal(
+            CredentialModal(self.cog, self.game, self.package, "ios_clone", self.user_balance, self.locale)
+        )
+
+    @discord.ui.button(label="◀ Back", style=discord.ButtonStyle.secondary, row=0)
+    async def back_btn(self, interaction, _):
+        embed = _ios_method_embed(self.game, self.package)
+        view = IOSMethodView(self.cog, self.game, self.category, self.package, self.user_balance, self.locale)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
 class CredentialModal(discord.ui.Modal):
-    """Modal nhập thông tin tài khoản iOS (iCloud) hoặc Android (Google Play)."""
+    """Modal nhập thông tin tài khoản cho các platform."""
 
     def __init__(self, cog, game, package, platform: str, user_balance: float, locale: str = "en"):
-        is_ios = platform == "ios"
-        title = f"{'🍎 iOS' if is_ios else '🤖 Android'} — {game['name']}"
+        titles = {
+            "ios":       f"🍎 iOS — {game['name']}",
+            "ios_clone": f"🔄 iOS Clone iCloud — {game['name']}",
+            "android":   f"🤖 Android — {game['name']}",
+            "facebook":  f"📘 Facebook — {game['name']}",
+        }
+        title = titles.get(platform, f"{platform.capitalize()} — {game['name']}")
         super().__init__(title=title)
 
-        account_label = "iCloud Account Email" if is_ios else "Google Play Account Email"
-        account_placeholder = "example@icloud.com" if is_ios else "example@gmail.com"
-        password_label = "iCloud Password" if is_ios else "Google Play Password"
+        if platform == "ios":
+            account_label = "iCloud Account Email"
+            account_placeholder = "example@icloud.com"
+            password_label = "iCloud Password"
+        elif platform == "ios_clone":
+            account_label = "Email Apple ID mới (clone)"
+            account_placeholder = "example@icloud.com"
+            password_label = "Mật khẩu Apple ID mới"
+        elif platform == "android":
+            account_label = "Google Play Account Email"
+            account_placeholder = "example@gmail.com"
+            password_label = "Google Play Password"
+        elif platform == "facebook":
+            account_label = "Email/SĐT Facebook"
+            account_placeholder = "example@email.com hoặc số điện thoại"
+            password_label = "Mật khẩu Facebook"
+        else:
+            account_label = "Tài khoản"
+            account_placeholder = "Nhập tài khoản"
+            password_label = "Mật khẩu"
 
         self.account_input = discord.ui.TextInput(
             label=account_label, placeholder=account_placeholder, min_length=3, max_length=100

@@ -415,10 +415,15 @@ class AdminCog(commands.Cog):
             return
         if message.channel.category.name != _TICKET_CATEGORY:
             return
-        # Bỏ qua nếu không có nội dung văn bản
+        # Bỏ qua nếu không có nội dung văn bản và không có ảnh
         content = message.content.strip()
-        if not content:
+        image_urls = [
+            a.url for a in message.attachments
+            if a.content_type and a.content_type.startswith("image/")
+        ]
+        if not content and not image_urls:
             return
+        relay_content = content or f"[Đã gửi {len(image_urls)} ảnh]"
 
         # Tìm đơn hàng gắn với ticket channel này
         try:
@@ -438,15 +443,16 @@ class AdminCog(commands.Cog):
                 order_id=order["id"],
                 discord_id=str(message.author.id),
                 display_name=message.author.display_name,
-                content=content,
+                content=relay_content,
             )
 
             # ── Gọi AI tự động trả lời ──────────────────────────────────────
             history = await _db.get_chat_history(order["id"], limit=20)
             ai_reply = await get_ai_reply(
-                customer_message=content,
+                customer_message=relay_content,
                 order_context=order,
                 history=history,
+                image_urls=image_urls or None,
             )
             if ai_reply:
                 # Gửi vào ticket Discord dưới dạng embed

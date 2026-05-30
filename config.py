@@ -51,4 +51,4 @@ PAYMENT_EXPIRY_MINUTES: int = int(os.getenv("PAYMENT_EXPIRY_MINUTES", 30))
 # Lấy key tại: https://platform.openai.com/api-keys
 # Để trống = tắt tính năng AI bot
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
+OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
